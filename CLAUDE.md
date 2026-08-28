@@ -92,6 +92,12 @@ Para não redescobrir a cada sessão.
 - **Fotos da Anne (`src/lib/fotos.ts`):** ficam em IndexedDB, **de propósito fora do estado
   que sincroniza** — são cópia pessoal do aparelho, não sobem para o Firebase nem para o
   repositório. Ao mexer nisso, manter essa separação: o repositório é público.
+- **Ícone do app da Anne:** sai de `scripts/anne-retrato.png` — desenho feito por IA a partir
+  de uma foto, que não a identifica. O Danilo decidiu versionar esse arquivo; é a exceção
+  conhecida à regra 12b, que segue valendo para foto de pessoa real e imagem de terceiro.
+  `python3 scripts/gen_icons.py anne` reduz o arquivo para 192/512/maskable (leitor de PNG e
+  redução por média de área estão no próprio script, sem dependência externa). Os ícones do
+  endereço principal e da Kelly continuam desenhados em código, no mesmo arquivo.
 - **Perfis:** `kelly` (monta e confere) e `anne` (executa). PIN opcional protege o modo mamãe.
 - **O app da Anne não tem Ajustes, de propósito.** Ela liga a sincronização abrindo um link
   `.../anne/#sync=<config em base64>`, gerado em Ajustes no app da Kelly (`linkDeSincronizacao`
