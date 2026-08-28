@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { Estado } from '../lib/types'
 import { alterar, exportarEstado, importarEstado, useStatusNuvem } from '../lib/store'
 import { interpretarConfig, lerConfigNuvem, salvarConfigNuvem } from '../lib/nuvem'
+import { GaleriaFotos } from '../components/Fotos'
 
 const RECADO_STATUS: Record<string, string> = {
   desligado: 'Só neste aparelho',
@@ -104,6 +105,11 @@ export function AjustesView({ estado }: { estado: Estado }) {
             </button>
           )}
         </div>
+      </div>
+
+      <div className="cartao">
+        <h2>📸 Fotos do app da Anne</h2>
+        <GaleriaFotos />
       </div>
 
       <div className="cartao">

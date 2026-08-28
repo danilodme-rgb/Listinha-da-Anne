@@ -7,6 +7,8 @@ import {
 } from '../lib/store'
 import { Calendario } from '../components/Calendario'
 import { Festa } from '../components/Festa'
+import { BannerFotos, GaleriaFotos } from '../components/Fotos'
+import { Modal } from '../components/Modal'
 
 interface Props {
   estado: Estado
@@ -24,6 +26,7 @@ const ELOGIOS = [
 
 export function AnneView({ estado, ano, mes, aoMudarMes, dia, aoMudarDia }: Props) {
   const [festa, setFesta] = useState<{ titulo: string; detalhe: string } | null>(null)
+  const [trocandoFotos, setTrocandoFotos] = useState(false)
 
   const lista = listaDe(estado, dia)
   const c = carteira(estado)
@@ -51,6 +54,8 @@ export function AnneView({ estado, ano, mes, aoMudarMes, dia, aoMudarDia }: Prop
   return (
     <>
       {festa && <Festa titulo={festa.titulo} detalhe={festa.detalhe} aoFechar={() => setFesta(null)} />}
+
+      <BannerFotos />
 
       {temNovidade && (
         <div className="convite">
@@ -176,6 +181,22 @@ export function AnneView({ estado, ano, mes, aoMudarMes, dia, aoMudarDia }: Prop
               <button className="btn pequeno contorno" style={{ flex: 1 }} onClick={() => aoMudarDia(somaDias(dia, 1))}>Próximo dia ›</button>
             </div>
           </div>
+
+          <div className="cartao">
+            <h2>📸 Minhas fotos</h2>
+            <p className="ajuda" style={{ margin: '0 0 10px' }}>
+              Escolha fotos bonitas para aparecerem lá em cima. Elas ficam só no seu celular.
+            </p>
+            <button className="btn grande" onClick={() => setTrocandoFotos(true)}>
+              Trocar minhas fotos
+            </button>
+          </div>
+
+          {trocandoFotos && (
+            <Modal titulo="Minhas fotos" aoFechar={() => setTrocandoFotos(false)}>
+              <GaleriaFotos />
+            </Modal>
+          )}
 
           {avisos.length > 0 && (
             <div className="cartao">

@@ -116,12 +116,28 @@ Pronto: o que a Kelly monta aparece na Anne, e o que a Anne conclui volta para a
 > Se o `databaseURL` não aparecer no bloco copiado, o app monta o endereço a partir do
 > `projectId` — mas confira no Realtime Database se bate.
 
-## Passo 5 · Proteger a aba da mamãe
+## Passo 5 · Colocar as fotos preferidas da Anne
+
+No app da Anne aparece uma faixa de fotos no topo. Ela toca na imagem para ver a próxima.
+
+- **Pelo app da Anne:** aba *Minha listinha* → **📸 Minhas fotos** → *Escolher fotos do celular*.
+- **Pelo app da Kelly:** Ajustes → **📸 Fotos do app da Anne** (precisa ser feito no celular
+  em que o app da Anne está instalado).
+
+Cabem 12 fotos, escolhidas do rolo do próprio celular. Elas ficam **só naquele aparelho**:
+não sobem para o Firebase, não vão para o outro celular e não entram no repositório do
+projeto. São reduzidas automaticamente antes de guardar, para não ocupar espaço à toa.
+
+> Por que não já vieram fotos prontas no app: imagens de artistas têm dono, e o repositório
+> deste projeto é público — colocá-las lá seria redistribuir. Com esse recurso, a Anne usa as
+> fotos que quiser no celular dela, que é uma cópia pessoal.
+
+## Passo 6 · Proteger a aba da mamãe
 
 Em **Ajustes → Senha da aba da mamãe**, cadastre um PIN de 4 números. Sem isso a Anne
 consegue entrar no modo mamãe e conferir as próprias tarefas. 😄
 
-## Passo 6 · Ligar os avisos
+## Passo 7 · Ligar os avisos
 
 Em **Ajustes → Avisos do celular → Permitir avisos**, nos dois aparelhos. O celular passa a
 notificar quando a Anne concluir uma tarefa e quando a mamãe mandar listinha nova.

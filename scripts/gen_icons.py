@@ -52,6 +52,20 @@ def estrela(cx, cy, r_ext, r_int, pontas=5):
     return pts
 
 
+def dist_polilinha(px, py, pts):
+    return min(seg_dist(px, py, pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1])
+               for i in range(len(pts) - 1))
+
+
+def arco(cx, cy, raio, de_graus, ate_graus, n=24):
+    """Pontos ao longo de um arco de circulo, para bocas e olhos piscando."""
+    pts = []
+    for i in range(n + 1):
+        a = math.radians(de_graus + (ate_graus - de_graus) * i / n)
+        pts.append((cx + raio * math.cos(a), cy + raio * math.sin(a)))
+    return pts
+
+
 def dentro_do_coracao(px, py, cx, cy, escala):
     x = (px - cx) / escala
     y = -(py - cy) / escala
@@ -61,7 +75,7 @@ def dentro_do_coracao(px, py, cx, cy, escala):
 TEMAS = {
     # (cor inicial, cor final, forma)
     'base':  ((139, 92, 246), (236, 72, 153), 'checks'),
-    'anne':  ((236, 72, 153), (251, 191, 36), 'estrela'),
+    'anne':  ((236, 72, 153), (168, 85, 247), 'estrela'),
     'kelly': ((109, 74, 255), (59, 130, 246), 'coracao'),
 }
 
@@ -87,14 +101,15 @@ def render(size, maskable=False, tema='base'):
             # coordenadas do desenho interno (encolhidas se maskable)
             U = (X - S / 2) / scale + S / 2
             V = (Y - S / 2) / scale + S / 2
-            # argolas do caderno
-            for ax in (150, 332):
-                if rounded(U, V, ax, 88, ax + 30, 148, 15) < 0:
-                    blend(px, i, (253, 230, 138), 1)
-            # folha branca
-            d2 = rounded(U, V, 118, 112, 394, 412, 34)
-            if d2 < 1:
-                blend(px, i, (255, 255, 255), min(1.0, 1 - d2))
+            if forma != 'estrela':
+                # argolas do caderno
+                for ax in (150, 332):
+                    if rounded(U, V, ax, 88, ax + 30, 148, 15) < 0:
+                        blend(px, i, (253, 230, 138), 1)
+                # folha branca
+                d2 = rounded(U, V, 118, 112, 394, 412, 34)
+                if d2 < 1:
+                    blend(px, i, (255, 255, 255), min(1.0, 1 - d2))
             if forma == 'checks':
                 # tres "check" roxos
                 for oy in (0, 86, 172):
@@ -107,12 +122,23 @@ def render(size, maskable=False, tema='base'):
                     if rounded(U, V, 266, 206 + oy, 266 + wdt, 226 + oy, 10) < 0:
                         blend(px, i, (249, 168, 212), 1)
             elif forma == 'estrela':
-                # duas linhas + estrela grande, para a Anne reconhecer de longe
-                for oy, wdt in ((0, 150), (34, 110)):
-                    if rounded(U, V, 168, 340 + oy, 168 + wdt, 356 + oy, 8) < 0:
-                        blend(px, i, (249, 168, 212), 1)
-                if ponto_no_poligono(U, V, estrela(256, 236, 96, 40)):
-                    blend(px, i, (251, 146, 60), 1)
+                # estrelinha piscando: a "mascote" do app da Anne
+                if ponto_no_poligono(U, V, estrela(256, 262, 218, 92)):
+                    blend(px, i, (251, 191, 36), 1)
+                    # bochechas
+                    for bx in (188, 324):
+                        r = math.hypot(U - bx, V - 292)
+                        if r < 26:
+                            blend(px, i, (251, 113, 133), 0.55 * (1 - r / 26))
+                    # olho aberto
+                    if math.hypot(U - 210, V - 240) < 17:
+                        blend(px, i, (67, 20, 7), 1)
+                    # olho piscando (arco para cima)
+                    if dist_polilinha(U, V, arco(302, 254, 22, 200, 340)) < 8:
+                        blend(px, i, (67, 20, 7), 1)
+                    # sorriso
+                    if dist_polilinha(U, V, arco(256, 288, 40, 25, 155)) < 8:
+                        blend(px, i, (67, 20, 7), 1)
             elif forma == 'coracao':
                 for oy, wdt in ((0, 150), (34, 110)):
                     if rounded(U, V, 168, 340 + oy, 168 + wdt, 356 + oy, 8) < 0:

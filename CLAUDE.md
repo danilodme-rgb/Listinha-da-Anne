@@ -33,6 +33,9 @@ Combinado com o Danilo. Valem para toda sessão neste repositório.
 11. **Mudança visual → rodar no navegador e mandar print.** Screenshot vale mais que descrição.
 12. Textos do app são para a Anne (8 anos) e para a Kelly: frases curtas, emoji como pista
     visual, zero jargão técnico. Valores em R$ formatados em pt-BR.
+12b. **Nada de imagem de terceiros versionada.** O repositório é público; foto de artista ou
+    de pessoa real não entra nele. Arte do app é desenhada (ver `scripts/gen_icons.py`), e
+    foto pessoal fica no aparelho, via `src/lib/fotos.ts`.
 
 ## 4. Evitar retrabalho
 
@@ -85,6 +88,9 @@ Para não redescobrir a cada sessão.
   (precisa ter runner e o passo `deploy-pages` verde), não tentar `curl` na URL.
 - **Estado:** `localStorage` (offline-first), com sincronização opcional entre celulares via
   Firebase Realtime Database, configurada em Ajustes (não versionada).
+- **Fotos da Anne (`src/lib/fotos.ts`):** ficam em IndexedDB, **de propósito fora do estado
+  que sincroniza** — são cópia pessoal do aparelho, não sobem para o Firebase nem para o
+  repositório. Ao mexer nisso, manter essa separação: o repositório é público.
 - **Perfis:** `kelly` (monta e confere) e `anne` (executa). PIN opcional protege o modo mamãe.
 - **Três entradas (build multi-página do Vite):** `/` (com troca de perfil), `/anne/` e
   `/kelly/`. Cada uma tem seu HTML, manifest, ícone e `main-*.tsx`, que passa `perfilFixo`
