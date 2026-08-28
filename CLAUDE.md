@@ -73,8 +73,16 @@ Para não redescobrir a cada sessão.
 - **Publicação:** GitHub Pages via Actions (`.github/workflows/deploy.yml`), dispara em push
   para `main`. Branch padrão é `main`. URL:
   https://danilodme-rgb.github.io/Listinha-da-Anne/
-- **Pegadinha do Pages:** o environment `github-pages` só aceita deploy do **branch padrão**.
-  Deploy de outro branch falha em ~2s, sem runner e sem log.
+- **Pegadinha do Pages (custou 4 tentativas):** ao ligar o Pages, o GitHub cria o environment
+  `github-pages` travado no branch que era padrão *naquele momento*. Se o branch padrão mudar
+  depois, a regra continua apontando para o antigo e todo deploy é recusado **antes de começar**.
+  Conserto: Settings → Environments → github-pages → Deployment branches → **No restriction**.
+  Como distinguir as duas falhas pelo sintoma:
+  - job `deploy` com runner + `404 Ensure GitHub Pages has been enabled` → Pages não está ligado;
+  - job `deploy` **sem runner, sem log, 1-2s**, com `build` verde → barrado pelo environment.
+- **Não consigo abrir o site publicado daqui:** o proxy do ambiente bloqueia `github.io`
+  (`CONNECT tunnel failed, 403`). Para confirmar deploy, checar o job `deploy` no Actions
+  (precisa ter runner e o passo `deploy-pages` verde), não tentar `curl` na URL.
 - **Estado:** `localStorage` (offline-first), com sincronização opcional entre celulares via
   Firebase Realtime Database, configurada em Ajustes (não versionada).
 - **Perfis:** `kelly` (monta e confere) e `anne` (executa). PIN opcional protege o modo mamãe.
