@@ -112,7 +112,15 @@ Para não redescobrir a cada sessão.
   para o `App`. Com `perfilFixo` some o botão de troca, as abas são só as do perfil, e o
   link da Kelly pede o PIN na abertura.
 - **Fluxo do dinheiro:** tarefa feita → aguardando conferência → Kelly confere → entra no
-  cofrinho → "Registrar pagamento" baixa o saldo.
+  cofrinho → o saldo baixa por "Registrar pagamento" (Kelly) ou pelo botão "Já recebi meu
+  dinheiro!" (Anne, que avisa a Kelly do valor).
+- **Avisos combinados (`src/lib/regras.ts`):** Anne conclui tarefa → Kelly recebe tarefa +
+  valor a pagar; escala com folga do Alexandre → as duas são avisadas de que ele está na
+  cidade (id do aviso é fixo por dia, `av_papai_<perfil>_<data>`, senão os dois celulares
+  duplicam o recado ao sincronizar).
+- **Tarefa com perguntinhas:** `Afazer.passos` vira `TarefaDoDia.passos` no dia. A Anne só
+  conclui depois de responder todas (é o caso do 🛁 Banho: toalha, coisas, luzes). Kelly
+  edita as perguntas em ⚙️ Editar afazeres.
 - **Arquivos-chave:** `src/lib/parser.ts` (leitor da escala), `src/lib/store.ts` (estado e
   ações), `src/views/` (uma tela por aba).
 - **Documentação para o usuário:** `COMO-USAR.md` — atualizar quando algo mudar para ele.

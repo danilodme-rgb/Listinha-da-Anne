@@ -2,9 +2,10 @@ import { useState } from 'react'
 import type { Estado, TarefaDoDia } from '../lib/types'
 import { brl, curta, ehHoje, horaCurta, hoje, porExtenso, somaDias } from '../lib/dates'
 import {
-  avisosDe, carteira, comPapai, concluirTarefa, desfazerTarefa, listaDe,
-  marcarAvisosLidos, marcarListaVista,
+  alternarPassoTarefa, avisosDe, carteira, comPapai, concluirTarefa, confirmarRecebimento,
+  desfazerTarefa, listaDe, marcarAvisosLidos, marcarListaVista,
 } from '../lib/store'
+import { passosFaltando } from '../lib/regras'
 import { Calendario } from '../components/Calendario'
 import { Festa } from '../components/Festa'
 import { BannerFotos, GaleriaFotos } from '../components/Fotos'
@@ -27,6 +28,7 @@ const ELOGIOS = [
 export function AnneView({ estado, ano, mes, aoMudarMes, dia, aoMudarDia }: Props) {
   const [festa, setFesta] = useState<{ titulo: string; detalhe: string } | null>(null)
   const [trocandoFotos, setTrocandoFotos] = useState(false)
+  const [perguntando, setPerguntando] = useState<string | null>(null)
 
   const lista = listaDe(estado, dia)
   const c = carteira(estado)
@@ -50,6 +52,21 @@ export function AnneView({ estado, ano, mes, aoMudarMes, dia, aoMudarDia }: Prop
       detalhe: `${brl(t.valor)} entrou no seu cofrinho!`,
     })
   }
+
+  /** Tarefa com perguntinhas (o banho) abre a listinha de conferencia antes. */
+  const tocarNaTarefa = (t: TarefaDoDia) => {
+    if (t.feita) { if (!t.conferida) desfazerTarefa(dia, t.id); return }
+    if (t.passos?.length) { setPerguntando(t.id); return }
+    concluir(t)
+  }
+
+  const receber = () => {
+    if (!confirm(`A mamãe já te deu ${brl(c.saldo)}?`)) return
+    const valor = confirmarRecebimento()
+    if (valor > 0) setFesta({ titulo: 'Dinheiro recebido! 💰', detalhe: `${brl(valor)} são seus. A mamãe já sabe!` })
+  }
+
+  const tarefaPerguntando = lista.tarefas.find((t) => t.id === perguntando) ?? null
 
   return (
     <>
@@ -110,7 +127,7 @@ export function AnneView({ estado, ano, mes, aoMudarMes, dia, aoMudarDia }: Prop
                     <button
                       key={t.id}
                       className={`tarefa anne-tarefa${t.feita ? ' feita' : ''}`}
-                      onClick={() => (t.feita ? (t.conferida ? undefined : desfazerTarefa(dia, t.id)) : concluir(t))}
+                      onClick={() => tocarNaTarefa(t)}
                       aria-pressed={t.feita}
                     >
                       <span className="emoji">{t.emoji}</span>
@@ -119,6 +136,11 @@ export function AnneView({ estado, ano, mes, aoMudarMes, dia, aoMudarDia }: Prop
                         {t.feita && (
                           <div className="obs">
                             {t.conferida ? '✓ a mamãe conferiu!' : 'feito! esperando a mamãe conferir'}
+                          </div>
+                        )}
+                        {!t.feita && !!t.passos?.length && (
+                          <div className="obs">
+                            {t.passos.length - passosFaltando(t)} de {t.passos.length} perguntinhas
                           </div>
                         )}
                       </div>
@@ -154,6 +176,14 @@ export function AnneView({ estado, ano, mes, aoMudarMes, dia, aoMudarDia }: Prop
                 <div className="num" style={{ color: 'var(--papai)' }}>{brl(c.aguardando)}</div>
               </div>
             </div>
+            <button className="btn ok grande" style={{ marginTop: 12 }} disabled={c.saldo <= 0} onClick={receber}>
+              💰 Já recebi meu dinheiro!
+            </button>
+            <p className="ajuda" style={{ margin: '8px 0 0' }}>
+              {c.saldo > 0
+                ? 'Aperte só depois que a mamãe te entregar o dinheiro. O cofrinho volta pro zero e ela recebe o aviso.'
+                : 'Seu cofrinho está zerado. Faça as tarefinhas para encher de novo! ⭐'}
+            </p>
             {c.pago > 0 && (
               <p className="ajuda" style={{ margin: '10px 0 0' }}>
                 Você já recebeu {brl(c.pago)} até hoje. Que economia! 🌟
@@ -191,6 +221,38 @@ export function AnneView({ estado, ano, mes, aoMudarMes, dia, aoMudarDia }: Prop
               Trocar minhas fotos
             </button>
           </div>
+
+          {tarefaPerguntando && (
+            <Modal
+              titulo={`${tarefaPerguntando.emoji} ${tarefaPerguntando.titulo}`}
+              aoFechar={() => setPerguntando(null)}
+            >
+              <p className="ajuda">Antes de marcar, responde pra mim:</p>
+              <div className="pilha">
+                {(tarefaPerguntando.passos ?? []).map((p, i) => (
+                  <button
+                    key={p.titulo}
+                    className={`tarefa anne-tarefa${p.feito ? ' feita' : ''}`}
+                    onClick={() => alternarPassoTarefa(dia, tarefaPerguntando.id, i)}
+                    aria-pressed={p.feito}
+                  >
+                    <span className="emoji">{p.feito ? '✅' : '⬜'}</span>
+                    <div className="txt"><div className="titulo">{p.titulo}</div></div>
+                  </button>
+                ))}
+              </div>
+              <button
+                className="btn primario grande"
+                style={{ marginTop: 14 }}
+                disabled={passosFaltando(tarefaPerguntando) > 0}
+                onClick={() => { concluir(tarefaPerguntando); setPerguntando(null) }}
+              >
+                {passosFaltando(tarefaPerguntando) > 0
+                  ? `Faltam ${passosFaltando(tarefaPerguntando)} 👆`
+                  : `Terminei! ${brl(tarefaPerguntando.valor)} 💰`}
+              </button>
+            </Modal>
+          )}
 
           {trocandoFotos && (
             <Modal titulo="Minhas fotos" aoFechar={() => setTrocandoFotos(false)}>

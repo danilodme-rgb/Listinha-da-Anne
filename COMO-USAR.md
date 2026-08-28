@@ -160,8 +160,17 @@ todos. Se o outro celular ainda estiver pedindo o PIN antigo, **puxe a tela para
 - **No celular da Anne:** aba *Minha listinha*, lá no fim → **🔔 Avisos no celular →
   Quero receber avisos**.
 
-O celular passa a notificar quando a Anne concluir uma tarefa e quando a mamãe mandar
-listinha nova.
+O celular passa a notificar:
+
+| Quando | Quem é avisada | O que aparece |
+| --- | --- | --- |
+| A Anne conclui uma tarefa | Kelly | "Anne fez: 🛁 Banho" + **a pagar R$ 1,50** |
+| A mamãe manda listinha nova / confere as tarefas | Anne | envelope 💌 e "Mamãe conferiu! 🎉" |
+| A escala marca **folga** do Alexandre naquele dia | **as duas** | "O papai está na cidade hoje" |
+| A Anne confirma que recebeu o dinheiro | Kelly | "A Anne confirmou que recebeu! 💰" |
+
+O aviso de papai na cidade sai uma vez por dia, nos dois aparelhos, e depende da escala estar
+lida naquele mês — dia sem escala não avisa nada.
 
 ## Puxar para atualizar
 
@@ -216,12 +225,24 @@ Ela abre, vê o envelope 💌, lê o recado, e vê cada tarefa com o valor ao la
 *"Se você fizer tudo hoje: R$ 3,50"*. Ao tocar numa tarefa: confete, parabéns, e o valor entra
 no cofrinho como **"esperando a mamãe"**.
 
+**Tarefa com perguntinhas (o 🛁 Banho).** Tocar no Banho abre uma listinha de conferência —
+*Recolheu a toalha? · Organizou suas coisas? · Apagou as luzes?* O botão **Terminei!** só
+libera depois que ela marca as três; até lá a tarefa mostra *"1 de 3 perguntinhas"*.
+Qualquer afazer pode ter perguntinhas: em **⚙️ Editar afazeres**, toque no **❓** do item e
+escreva uma pergunta por linha.
+
+**Quando ela receber o dinheiro.** No cofrinho tem o botão **💰 Já recebi meu dinheiro!**.
+Ela confirma, o cofrinho volta a zero e a Kelly recebe o aviso com o valor. É o mesmo efeito
+do *Registrar pagamento* da aba Mamãe — use um ou outro, não os dois para o mesmo dinheiro.
+
 ### Conferir e pagar (aba Mamãe)
 
 O bloco **🔔 Para conferir** aparece no topo com o que a Anne marcou. Toque em **✓ Conferido**
 (ou *Conferir todas*) e o valor passa para **"a pagar"** no cofrinho — a Anne recebe o aviso
 "Mamãe conferiu! 🎉". Quando você entregar o dinheiro de verdade, use
-**💵 Registrar pagamento** para zerar o saldo e guardar no histórico.
+**💵 Registrar pagamento** para zerar o saldo e guardar no histórico. Se preferir que a
+própria Anne confirme, ela tem o botão **💰 Já recebi meu dinheiro!** no cofrinho dela —
+o saldo zera do mesmo jeito e o aviso chega para você.
 
 ---
 

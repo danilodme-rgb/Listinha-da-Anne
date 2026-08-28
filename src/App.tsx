@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Perfil } from './lib/types'
 import { hoje, paraData } from './lib/dates'
-import { atualizarDaNuvem, avisosDe, conectarNuvem, listaDe, naoLidos, useEstado } from './lib/store'
+import {
+  atualizarDaNuvem, avisarPapaiNaCidade, avisosDe, conectarNuvem, listaDe, naoLidos, useEstado,
+} from './lib/store'
 import { ligadaPeloLink } from './lib/nuvem'
 import { EscalaView } from './views/EscalaView'
 import { KellyView } from './views/KellyView'
@@ -38,6 +40,14 @@ export function App({ perfilFixo }: PropsApp) {
   const { puxa, rodando } = useAtualizarPuxando(atualizarDaNuvem)
 
   useEffect(() => { conectarNuvem() }, [])
+  // Escala mudou (na mao ou vinda da nuvem)? Confere se hoje e' dia de papai na cidade.
+  // O visibilitychange cobre o celular que fica com o app aberto e vira o dia.
+  useEffect(() => {
+    const conferir = () => { if (!document.hidden) avisarPapaiNaCidade() }
+    conferir()
+    document.addEventListener('visibilitychange', conferir)
+    return () => document.removeEventListener('visibilitychange', conferir)
+  }, [estado.escala])
   useEffect(() => { if (!perfilFixo) localStorage.setItem(CHAVE_PERFIL, perfil) }, [perfil, perfilFixo])
   useEffect(() => { setAba(perfil === 'kelly' ? 'kelly' : 'anne') }, [perfil])
 
