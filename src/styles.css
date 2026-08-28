@@ -358,3 +358,22 @@ label.rotulo { display: block; font-size: 13px; font-weight: 800; color: var(--t
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 .banner-fotos .pontinhos i.ativo { background: #fff; width: 18px; }
+
+/* ------------------------------------------------------------ puxar para atualizar */
+
+/* sem isso o proprio navegador captura o gesto e recarrega a pagina inteira */
+html, body { overscroll-behavior-y: contain; }
+
+.puxar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--roxo);
+  transition: height 0.15s ease;
+}
+.puxar .rodinha { animation: girar 0.9s linear infinite; }
+@keyframes girar { to { transform: rotate(360deg); } }

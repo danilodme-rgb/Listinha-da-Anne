@@ -25,7 +25,8 @@ O projeto já vem com a publicação automática configurada.
 
 1. No GitHub, vá em **Settings → Pages**.
 2. Em *Source*, escolha **GitHub Actions**.
-3. Faça o merge do branch `claude/listinha-anne-app-ey214o` para o `main`.
+3. Abra o Pull Request do branch da vez e faça o merge para o `main`. **É o merge que publica**
+   — enquanto o trabalho estiver só no branch, o site no ar continua com a versão antiga.
 4. Em **Actions** acompanhe o job "Publicar no GitHub Pages" (leva ~1 minuto).
 5. Os endereços ficam disponíveis (veja a tabela do Passo 3).
 
@@ -108,8 +109,20 @@ Anne. A sincronização é gratuita e usa o Firebase do Google.
    - em *Código da família*, invente um código difícil de adivinhar,
      ex.: `anne-kelly-8f3k9`;
    - cole o bloco copiado no campo de configuração;
-   - toque em **Ligar sincronização**.
-7. **Repita o passo 6 no celular da Anne, com exatamente o mesmo código de família.**
+   - toque em **Ligar sincronização**. O app recarrega.
+
+   > **O campo volta vazio, e isso é o certo.** Depois de recarregar, o app não mostra de novo
+   > o que colou. A confirmação é a linha verde **Sincronizado ✅** e o aviso
+   > *"Já tem configuração guardada neste aparelho"* logo acima do campo. Se aparecerem, deu certo.
+
+7. **No celular da Anne, use o link de sincronização.** O app dela não tem Ajustes de
+   propósito (é uma criança de 8 anos, não pode desligar a sincronização sem querer). Então:
+   - no app da Kelly: **Ajustes → 📲 Ligar no celular da Anne → Gerar link de sincronização**;
+   - toque em **Copiar link** e mande para o celular da Anne (WhatsApp serve);
+   - **no celular dela**, abra o link uma vez. Aparece *"☁️ Sincronização ligada!"* — pronto,
+     não precisa fazer mais nada. Depois disso ela usa o app pelo ícone, normalmente.
+
+   > Esse link carrega a chave do seu Firebase. Mande só para os celulares da família.
 
 Pronto: o que a Kelly monta aparece na Anne, e o que a Anne conclui volta para a Kelly.
 
@@ -137,10 +150,26 @@ projeto. São reduzidas automaticamente antes de guardar, para não ocupar espa�
 Em **Ajustes → Senha da aba da mamãe**, cadastre um PIN de 4 números. Sem isso a Anne
 consegue entrar no modo mamãe e conferir as próprias tarefas. 😄
 
+O PIN faz parte dos dados sincronizados: cadastrando num aparelho, ele passa a valer em
+todos. Se o outro celular ainda estiver pedindo o PIN antigo, **puxe a tela para baixo**
+(veja abaixo) para forçar a atualização.
+
 ## Passo 7 · Ligar os avisos
 
-Em **Ajustes → Avisos do celular → Permitir avisos**, nos dois aparelhos. O celular passa a
-notificar quando a Anne concluir uma tarefa e quando a mamãe mandar listinha nova.
+- **No celular da Kelly:** Ajustes → **🔔 Avisos do celular → Permitir avisos**.
+- **No celular da Anne:** aba *Minha listinha*, lá no fim → **🔔 Avisos no celular →
+  Quero receber avisos**.
+
+O celular passa a notificar quando a Anne concluir uma tarefa e quando a mamãe mandar
+listinha nova.
+
+## Puxar para atualizar
+
+Os dados chegam sozinhos quando os dois celulares estão com internet. Quando o celular ficou
+sem sinal, dormiu no bolso, ou você só quer ter certeza:
+
+**Puxe a tela para baixo**, como no Instagram. Aparece *"Atualizando…"* e o app relê tudo da
+nuvem. Chegar ao fim da rolagem faz a mesma coisa, sozinho.
 
 ---
 
@@ -243,7 +272,8 @@ Se gostar, é só pedir — coloquei em ordem de "mais útil primeiro":
 - **Aviso com o app fechado** ainda não funciona: hoje a notificação aparece com o app aberto
   ou em segundo plano. Push completo é o item da lista acima.
 - **Se as duas editarem o mesmo dia ao mesmo tempo**, vale a última alteração. Na prática
-  (mãe montando de manhã, filha marcando à tarde) não dá conflito.
+  (mãe montando de manhã, filha marcando à tarde) não dá conflito. Um aparelho que não mexeu
+  em nada sempre aceita o que vem da nuvem, mesmo que o relógio dele esteja adiantado.
 - **Quem tiver o código da família e a chave do Firebase consegue ver os dados.** Use um código
   difícil de adivinhar. Não há nada sensível ali, mas vale o cuidado.
 

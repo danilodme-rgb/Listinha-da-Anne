@@ -1,4 +1,5 @@
 import { lerEscala } from '../src/lib/parser'
+import { aceitaDaNuvem } from '../src/lib/sincronia'
 
 let falhas = 0
 const eq = (nome: string, obtido: unknown, esperado: unknown) => {
@@ -74,6 +75,19 @@ eq('sinonimos de folga',
 eq('letras soltas T e F', ler('1 F\n2 T\n3 T').dias, { '1': 'folga', '2': 'trabalho', '3': 'trabalho' })
 
 eq('texto sem nada legivel', ler('bom dia amor, segue a escala').dias, {})
+
+// ---------------------------------------------------------------- sincronizacao
+
+// (remoto, local, sincronizado) -> aceita o que veio da nuvem?
+eq('nuvem mais nova, aparelho parado', aceitaDaNuvem(200, 100, 100), true)
+eq('nuvem mais velha, aparelho parado: ainda assim manda',
+  aceitaDaNuvem(100, 200, 200), true)
+eq('mudanca local pendente e nuvem mais velha: fica a local',
+  aceitaDaNuvem(100, 300, 200), false)
+eq('mudanca local pendente e nuvem mais nova: entra a da nuvem',
+  aceitaDaNuvem(400, 300, 200), true)
+eq('mesma hora dos dois lados: nao mexe', aceitaDaNuvem(300, 300, 100), false)
+eq('aparelho novo (nunca publicou) adota a nuvem', aceitaDaNuvem(50, 999, 999), true)
 
 console.log(falhas === 0 ? '\nTodos os testes passaram.' : `\n${falhas} teste(s) falharam.`)
 process.exit(falhas === 0 ? 0 : 1)

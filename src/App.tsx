@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Perfil } from './lib/types'
 import { hoje, paraData } from './lib/dates'
-import { avisosDe, conectarNuvem, listaDe, naoLidos, useEstado } from './lib/store'
+import { atualizarDaNuvem, avisosDe, conectarNuvem, listaDe, naoLidos, useEstado } from './lib/store'
+import { ligadaPeloLink } from './lib/nuvem'
 import { EscalaView } from './views/EscalaView'
 import { KellyView } from './views/KellyView'
 import { AnneView } from './views/AnneView'
 import { AjustesView } from './views/AjustesView'
 import { Modal } from './components/Modal'
+import { FaixaAtualizar, useAtualizarPuxando } from './components/Atualizar'
 
 type Aba = 'escala' | 'kelly' | 'anne' | 'ajustes'
 
@@ -32,6 +34,8 @@ export function App({ perfilFixo }: PropsApp) {
   const [ano, setAno] = useState(inicio.getFullYear())
   const [mes, setMes] = useState(inicio.getMonth())
   const [dia, setDia] = useState(hoje())
+  const [avisoDoLink, setAvisoDoLink] = useState(() => ligadaPeloLink())
+  const { puxa, rodando } = useAtualizarPuxando(atualizarDaNuvem)
 
   useEffect(() => { conectarNuvem() }, [])
   useEffect(() => { if (!perfilFixo) localStorage.setItem(CHAVE_PERFIL, perfil) }, [perfil, perfilFixo])
@@ -125,6 +129,18 @@ export function App({ perfilFixo }: PropsApp) {
       </nav>
 
       <main className="conteudo">
+        <FaixaAtualizar puxa={puxa} rodando={rodando} />
+
+        {avisoDoLink && (
+          <div className="cartao">
+            <h2>☁️ Sincronização ligada!</h2>
+            <p className="ajuda">
+              Este aparelho agora conversa com o da mamãe. O que ela montar aparece aqui.
+            </p>
+            <button className="btn primario" onClick={() => setAvisoDoLink(false)}>Entendi 💜</button>
+          </div>
+        )}
+
         {aba === 'escala' && (
           <EscalaView estado={estado} perfil={perfil} ano={ano} mes={mes} aoMudarMes={mudarMes} />
         )}

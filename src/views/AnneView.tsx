@@ -211,6 +211,25 @@ export function AnneView({ estado, ano, mes, aoMudarMes, dia, aoMudarDia }: Prop
               </div>
             </div>
           )}
+
+          <div className="cartao">
+            <h2>🔔 Avisos no celular</h2>
+            <p className="ajuda">
+              Ligue para o celular te avisar quando a mamãe mandar listinha nova
+              e quando ela conferir as suas tarefas.
+            </p>
+            <button
+              className="btn grande"
+              onClick={() => {
+                if (!('Notification' in window)) { alert('Esse celular não faz avisos.'); return }
+                void Notification.requestPermission().then((p) => {
+                  alert(p === 'granted' ? 'Prontinho! Agora eu te aviso. 🔔' : 'Os avisos não foram permitidos.')
+                })
+              }}
+            >
+              Quero receber avisos
+            </button>
+          </div>
         </>
       )}
     </>

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { Estado } from '../lib/types'
 import { alterar, exportarEstado, importarEstado, useStatusNuvem } from '../lib/store'
-import { interpretarConfig, lerConfigNuvem, salvarConfigNuvem } from '../lib/nuvem'
+import { interpretarConfig, lerConfigNuvem, linkDeSincronizacao, salvarConfigNuvem } from '../lib/nuvem'
 import { GaleriaFotos } from '../components/Fotos'
 
 const RECADO_STATUS: Record<string, string> = {
@@ -17,6 +17,7 @@ export function AjustesView({ estado }: { estado: Estado }) {
   const [texto, setTexto] = useState('')
   const [familia, setFamilia] = useState(config?.familia ?? '')
   const [pin, setPin] = useState(estado.config.pinKelly ?? '')
+  const [link, setLink] = useState('')
 
   const baixarBackup = () => {
     const blob = new Blob([JSON.stringify(exportarEstado(), null, 2)], { type: 'application/json' })
@@ -66,8 +67,17 @@ export function AjustesView({ estado }: { estado: Estado }) {
           onChange={(e) => setFamilia(e.target.value)}
         />
 
+        {config && (
+          <p className="ajuda" style={{ marginTop: 12 }}>
+            ✅ Já tem configuração guardada neste aparelho — projeto <b>{config.projectId || '—'}</b>,
+            banco <b>{config.databaseURL.replace(/^https?:\/\//, '')}</b>.
+            O campo abaixo aparece vazio de propósito: o app não mostra o que já guardou.
+            Só preencha se for trocar de projeto.
+          </p>
+        )}
+
         <label className="rotulo" style={{ marginTop: 10 }} htmlFor="aj-config">
-          Configuração do Firebase (cole aqui)
+          Configuração do Firebase {config ? '(só para trocar de projeto)' : '(cole aqui)'}
         </label>
         <textarea
           id="aj-config"
@@ -83,8 +93,15 @@ export function AjustesView({ estado }: { estado: Estado }) {
             className="btn primario"
             style={{ flex: 1 }}
             onClick={() => {
-              const c = interpretarConfig(texto, familia)
-              if (!c) { alert('Não achei apiKey e databaseURL nesse texto.'); return }
+              const c = texto.trim()
+                ? interpretarConfig(texto, familia)
+                : config && { ...config, familia: familia.trim() || config.familia }
+              if (!c) {
+                alert(config
+                  ? 'Não achei apiKey e databaseURL nesse texto.'
+                  : 'Cole a configuração do Firebase primeiro.')
+                return
+              }
               salvarConfigNuvem(c)
               alert('Configuração salva! O app vai recarregar para conectar.')
               location.reload()
@@ -107,6 +124,44 @@ export function AjustesView({ estado }: { estado: Estado }) {
         </div>
       </div>
 
+      {config && (
+        <div className="cartao">
+          <h2>📲 Ligar no celular da Anne</h2>
+          <p className="ajuda">
+            O app da Anne não tem Ajustes de propósito. Gere o link abaixo e mande para o celular
+            dela (WhatsApp serve). Abrindo o link uma vez, o aparelho dela já fica sincronizado.
+          </p>
+          <button
+            className="btn grande"
+            onClick={() => setLink(linkDeSincronizacao(config, `${location.origin}${import.meta.env.BASE_URL}anne/`))}
+          >
+            Gerar link de sincronização
+          </button>
+          {link && (
+            <>
+              <textarea className="campo" style={{ minHeight: 84, fontSize: 12, marginTop: 10 }} readOnly value={link} />
+              <div className="linha" style={{ gap: 8, marginTop: 8 }}>
+                <button
+                  className="btn primario"
+                  style={{ flex: 1 }}
+                  onClick={() => {
+                    void navigator.clipboard?.writeText(link)
+                      .then(() => alert('Link copiado! Mande para o celular da Anne. 💜'))
+                      .catch(() => alert('Não consegui copiar. Selecione o texto e copie na mão.'))
+                  }}
+                >
+                  Copiar link
+                </button>
+                <button className="btn" onClick={() => setLink('')}>Esconder</button>
+              </div>
+              <p className="ajuda" style={{ marginTop: 8 }}>
+                ⚠️ Esse link carrega a chave do seu Firebase. Mande só para os celulares da família.
+              </p>
+            </>
+          )}
+        </div>
+      )}
+
       <div className="cartao">
         <h2>📸 Fotos do app da Anne</h2>
         <GaleriaFotos />
@@ -116,7 +171,8 @@ export function AjustesView({ estado }: { estado: Estado }) {
         <h2>🔒 Senha da aba da mamãe</h2>
         <p className="ajuda">
           Um PIN de 4 números para a Anne não conseguir conferir as próprias tarefas.
-          Deixe em branco para não pedir senha.
+          Deixe em branco para não pedir senha. Com a sincronização ligada, o PIN vale
+          em todos os aparelhos — pode levar alguns segundos para chegar no outro.
         </p>
         <div className="linha" style={{ gap: 8 }}>
           <input

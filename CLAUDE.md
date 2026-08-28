@@ -72,7 +72,8 @@ Combinado com o Danilo. Valem para toda sessão neste repositório.
 Para não redescobrir a cada sessão.
 
 - **App:** PWA React 18 + TypeScript + Vite. Sem back-end próprio.
-- **Comandos:** `npm run dev` · `npm test` (21 casos do leitor de escala) · `npm run build`
+- **Comandos:** `npm run dev` · `npm test` (`scripts/testes.ts`: leitor de escala + regra de
+  merge da sincronização) · `npm run build`
 - **Publicação:** GitHub Pages via Actions (`.github/workflows/deploy.yml`), dispara em push
   para `main`. Branch padrão é `main`. URL:
   https://danilodme-rgb.github.io/Listinha-da-Anne/
@@ -92,6 +93,14 @@ Para não redescobrir a cada sessão.
   que sincroniza** — são cópia pessoal do aparelho, não sobem para o Firebase nem para o
   repositório. Ao mexer nisso, manter essa separação: o repositório é público.
 - **Perfis:** `kelly` (monta e confere) e `anne` (executa). PIN opcional protege o modo mamãe.
+- **O app da Anne não tem Ajustes, de propósito.** Ela liga a sincronização abrindo um link
+  `.../anne/#sync=<config em base64>`, gerado em Ajustes no app da Kelly (`linkDeSincronizacao`
+  / `aplicarLinkDeSincronizacao` em `src/lib/nuvem.ts`). Ao mexer em Ajustes, lembrar que tudo
+  que ficar só lá é inalcançável no celular dela — foi assim que os avisos e a sincronização
+  ficaram impossíveis de ligar para a Anne.
+- **Merge da nuvem (`src/lib/sincronia.ts`):** aparelho sem mudança local pendente sempre
+  aceita o que vem da nuvem, sem comparar relógios. Comparar só `atualizadoEm` fazia um celular
+  com a hora adiantada ignorar para sempre o que a Kelly mudava.
 - **Três entradas (build multi-página do Vite):** `/` (com troca de perfil), `/anne/` e
   `/kelly/`. Cada uma tem seu HTML, manifest, ícone e `main-*.tsx`, que passa `perfilFixo`
   para o `App`. Com `perfilFixo` some o botão de troca, as abas são só as do perfil, e o

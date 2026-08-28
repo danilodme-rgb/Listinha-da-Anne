@@ -1,9 +1,14 @@
 import { useSyncExternalStore } from 'react'
 import type { Afazer, Aviso, Estado, ListaDoDia, Perfil, StatusDia, TarefaDoDia } from './types'
 import { chave, somaDias, paraData } from './dates'
-import { iniciarNuvem, lerConfigNuvem, publicarNaNuvem, type StatusNuvem } from './nuvem'
+import { aceitaDaNuvem } from './sincronia'
+import {
+  iniciarNuvem, lerConfigNuvem, lerDaNuvemAgora, nuvemAtiva, publicarNaNuvem,
+  type StatusNuvem,
+} from './nuvem'
 
 const CHAVE_LS = 'listinha-da-anne/estado'
+const CHAVE_SINC = 'listinha-da-anne/sincronizado-em'
 const VERSAO = 1
 
 export const AFAZERES_PADRAO: Afazer[] = [
@@ -68,7 +73,25 @@ function carregar(): Estado {
   return estadoNovo()
 }
 
+const eraAparelhoNovo = localStorage.getItem(CHAVE_LS) === null
 let estado: Estado = carregar()
+
+/**
+ * Ate' que horas o estado daqui e o da nuvem eram o mesmo.
+ * Enquanto este aparelho nao mexer em nada, ele segue a nuvem sem discutir horario --
+ * relogio de celular adiantado nao pode fazer o aparelho ignorar o que a Kelly mudou.
+ */
+let sincronizadoEm = (() => {
+  const salvo = Number(localStorage.getItem(CHAVE_SINC) ?? 0)
+  if (salvo > 0) return salvo
+  return eraAparelhoNovo ? estado.atualizadoEm : 0
+})()
+
+function marcarSincronizado(quando: number) {
+  sincronizadoEm = quando
+  try { localStorage.setItem(CHAVE_SINC, String(quando)) } catch { /* cheio: segue em memoria */ }
+}
+
 const ouvintes = new Set<() => void>()
 let instantaneoNuvem: { status: StatusNuvem; detalhe: string } = { status: 'desligado', detalhe: '' }
 const ouvintesNuvem = new Set<() => void>()
@@ -94,12 +117,25 @@ export function alterar(fn: (rascunho: Estado) => void): void {
   avisarTodos()
 }
 
-/** Estado vindo da nuvem: so' entra se for mais novo que o local. */
+/**
+ * Estado vindo da nuvem. Entra quando este aparelho nao tem mudanca propria
+ * pendente (o caso comum) ou quando o de la' e' mais novo.
+ */
 function receberDaNuvem(remoto: Estado) {
-  if (remoto.atualizadoEm <= estado.atualizadoEm) return
+  if (remoto.atualizadoEm === estado.atualizadoEm) { marcarSincronizado(remoto.atualizadoEm); return }
+  if (!aceitaDaNuvem(remoto.atualizadoEm, estado.atualizadoEm, sincronizadoEm)) return
   estado = migrar(remoto)
+  marcarSincronizado(estado.atualizadoEm)
   persistir()
   avisarTodos()
+}
+
+/** Rele' a nuvem agora. E' o que o puxar-para-atualizar chama. */
+export async function atualizarDaNuvem(): Promise<void> {
+  if (!lerConfigNuvem()) return
+  if (!nuvemAtiva()) { conectarNuvem(); return }
+  const remoto = await lerDaNuvemAgora()
+  if (remoto) receberDaNuvem(remoto)
 }
 
 export function conectarNuvem(): void {
