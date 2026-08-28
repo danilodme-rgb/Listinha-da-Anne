@@ -22,6 +22,9 @@ App de família para a **Kelly** (mãe) e a **Anne** (8 anos), com três frentes
 - **Mesada com conferência.** A Anne marca como feito → confete e parabéns → o valor fica
   "aguardando conferência" → a Kelly recebe o aviso e toca em **Conferido** → o dinheiro
   entra no cofrinho. O botão *Registrar pagamento* baixa o saldo quando ela recebe de verdade.
+- **Um app para cada uma.** Três entradas: `/anne/` (só a listinha dela), `/kelly/` (montar,
+  conferir e ajustar) e `/` (tudo, com troca de perfil). Cada uma instala como um app
+  separado no celular, com ícone e nome próprios.
 - **PWA instalável** e offline-first; sincronização opcional entre celulares via Firebase.
 
 ## Rodando
@@ -45,6 +48,9 @@ src/
     types.ts      tipos do domínio
   components/     Calendario, Modal, Festa (confete)
   views/          EscalaView, KellyView, AnneView, AjustesView
+  bootstrap.tsx   sobe o app; main-anne / main-kelly travam o perfil
+anne/index.html   entrada do app da Anne
+kelly/index.html  entrada do app da Kelly
 scripts/
   testar-parser.ts   21 casos reais de formato de escala
   gen_icons.py       gera os ícones do PWA

@@ -86,6 +86,10 @@ Para não redescobrir a cada sessão.
 - **Estado:** `localStorage` (offline-first), com sincronização opcional entre celulares via
   Firebase Realtime Database, configurada em Ajustes (não versionada).
 - **Perfis:** `kelly` (monta e confere) e `anne` (executa). PIN opcional protege o modo mamãe.
+- **Três entradas (build multi-página do Vite):** `/` (com troca de perfil), `/anne/` e
+  `/kelly/`. Cada uma tem seu HTML, manifest, ícone e `main-*.tsx`, que passa `perfilFixo`
+  para o `App`. Com `perfilFixo` some o botão de troca, as abas são só as do perfil, e o
+  link da Kelly pede o PIN na abertura.
 - **Fluxo do dinheiro:** tarefa feita → aguardando conferência → Kelly confere → entra no
   cofrinho → "Registrar pagamento" baixa o saldo.
 - **Arquivos-chave:** `src/lib/parser.ts` (leitor da escala), `src/lib/store.ts` (estado e

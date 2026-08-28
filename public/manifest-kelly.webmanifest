@@ -1,0 +1,16 @@
+{
+  "name": "Listinha — Mamãe",
+  "short_name": "Mamãe",
+  "description": "Montar a listinha da Anne, conferir tarefas e acompanhar o cofrinho.",
+  "start_url": "./kelly/",
+  "scope": "./kelly/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#faf7ff",
+  "theme_color": "#6d4aff",
+  "icons": [
+    { "src": "./icon-kelly-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-kelly-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-kelly-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

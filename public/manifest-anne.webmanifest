@@ -1,0 +1,16 @@
+{
+  "name": "Minha Listinha",
+  "short_name": "Listinha",
+  "description": "As tarefas da Anne, o cofrinho e a escala do papai.",
+  "start_url": "./anne/",
+  "scope": "./anne/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fff7fb",
+  "theme_color": "#ec4899",
+  "icons": [
+    { "src": "./icon-anne-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-anne-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-anne-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

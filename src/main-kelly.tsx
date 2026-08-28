@@ -1,3 +1,3 @@
 import { iniciar } from './bootstrap'
 
-iniciar()
+iniciar('kelly')

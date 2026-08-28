@@ -1,5 +1,5 @@
 // Service worker minimo: deixa o app instalavel e disponivel offline.
-const CACHE = 'listinha-v1'
+const CACHE = 'listinha-v2'
 
 self.addEventListener('install', (evento) => {
   self.skipWaiting()

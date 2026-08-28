@@ -27,14 +27,40 @@ O projeto já vem com a publicação automática configurada.
 2. Em *Source*, escolha **GitHub Actions**.
 3. Faça o merge do branch `claude/listinha-anne-app-ey214o` para o `main`.
 4. Em **Actions** acompanhe o job "Publicar no GitHub Pages" (leva ~1 minuto).
-5. O app fica em **https://danilodme-rgb.github.io/Listinha-da-Anne/**
+5. Os endereços ficam disponíveis (veja a tabela do Passo 3).
+
+> **Armadilha que já custou caro:** o environment `github-pages` guarda o branch que era
+> padrão quando o Pages foi ligado. Se o padrão mudar depois, o deploy é recusado sem log.
+> Conserto: Settings → Environments → github-pages → Deployment branches → **No restriction**.
 
 ## Passo 3 · Instalar no celular como aplicativo
 
-- **Android (Chrome):** abra o link → menu ⋮ → *Instalar aplicativo*.
-- **iPhone (Safari):** abra o link → botão Compartilhar → *Adicionar à Tela de Início*.
+Há **um link para cada uma**. Cada um instala como um app separado, com ícone e nome próprios.
 
-Ele passa a abrir em tela cheia, com ícone próprio, e funciona sem internet.
+| Quem | Link | O que aparece |
+|---|---|---|
+| **Anne** | https://danilodme-rgb.github.io/Listinha-da-Anne/anne/ | 🌟 Minha listinha · 📅 Papai |
+| **Kelly** | https://danilodme-rgb.github.io/Listinha-da-Anne/kelly/ | 📅 Escala · 💜 Mamãe · ⚙️ Ajustes |
+| Você (testes) | https://danilodme-rgb.github.io/Listinha-da-Anne/ | Tudo, com o botão de trocar de perfil |
+
+No link da Anne **não existe** o botão da mamãe: ela não consegue conferir as próprias
+tarefas nem mexer nos valores. No link da Kelly, se houver PIN cadastrado, ele é pedido
+na abertura.
+
+**Como instalar (mande o link certo para cada celular):**
+
+- **iPhone / iPad (tem que ser no Safari):** abra o link → botão **Compartilhar** (quadrado
+  com seta para cima) → **Adicionar à Tela de Início** → Adicionar.
+- **Android (Chrome):** abra o link → menu ⋮ → **Instalar aplicativo**.
+
+Depois disso ele abre em tela cheia, com ícone próprio, sem a barra do navegador, e funciona
+sem internet. **Não é um app da App Store** — publicar lá exigiria um Mac, o Xcode e a conta
+de desenvolvedor da Apple (US$ 99/ano). Na prática, para vocês, a diferença é só que ele não
+aparece na busca da App Store; na tela de início ele se comporta como qualquer outro app.
+
+> **Detalhe do iPhone:** os avisos só funcionam se o app tiver sido **adicionado à tela de
+> início** e o iOS for 16.4 ou mais novo. Abrindo pelo Safari, sem instalar, o iPhone não
+> mostra aviso nenhum.
 
 ## Passo 4 · Ligar a sincronização entre os celulares ⚠️ importante
 
@@ -78,7 +104,7 @@ Anne. A sincronização é gratuita e usa o Firebase do Google.
    ```
 
    **Copie esse bloco inteiro.**
-6. No app, entre em **Mamãe → Ajustes → Sincronizar entre celulares**:
+6. No app (link da Kelly), entre em **Ajustes → Sincronizar entre celulares**:
    - em *Código da família*, invente um código difícil de adivinhar,
      ex.: `anne-kelly-8f3k9`;
    - cole o bloco copiado no campo de configuração;
