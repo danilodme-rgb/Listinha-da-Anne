@@ -15,6 +15,14 @@ export interface Afazer {
   emoji: string
   titulo: string
   valor: number
+  /** Perguntinhas que a Anne responde antes de marcar como feita (ex.: o banho). */
+  passos?: string[]
+}
+
+/** Uma perguntinha dentro da tarefa do dia. */
+export interface PassoTarefa {
+  titulo: string
+  feito: boolean
 }
 
 export interface TarefaDoDia {
@@ -26,6 +34,8 @@ export interface TarefaDoDia {
   feitaEm?: number
   conferida: boolean
   conferidaEm?: number
+  /** Copia das perguntinhas do afazer, com a resposta da Anne no dia. */
+  passos?: PassoTarefa[]
 }
 
 export interface ListaDoDia {
@@ -43,6 +53,8 @@ export interface Pagamento {
   em: number
   valor: number
   descricao: string
+  /** true quando foi a propria Anne que confirmou o recebimento. */
+  porAnne?: boolean
 }
 
 export interface Aviso {

@@ -1,7 +1,8 @@
 import { useSyncExternalStore } from 'react'
 import type { Afazer, Aviso, Estado, ListaDoDia, Perfil, StatusDia, TarefaDoDia } from './types'
-import { chave, somaDias, paraData } from './dates'
+import { brl, chave, curta, hoje, somaDias, paraData } from './dates'
 import { aceitaDaNuvem } from './sincronia'
+import { deveAvisarPapai, idAvisoPapai, passosFaltando } from './regras'
 import {
   iniciarNuvem, lerConfigNuvem, lerDaNuvemAgora, nuvemAtiva, publicarNaNuvem,
   type StatusNuvem,
@@ -9,7 +10,19 @@ import {
 
 const CHAVE_LS = 'listinha-da-anne/estado'
 const CHAVE_SINC = 'listinha-da-anne/sincronizado-em'
-const VERSAO = 1
+const VERSAO = 2
+
+/**
+ * O banho deixa tudo espalhado, entao ele vem com perguntinhas: a Anne so' marca
+ * como feito depois de responder as tres.
+ */
+export const AFAZER_BANHO: Afazer = {
+  id: 'a11',
+  emoji: '🛁',
+  titulo: 'Banho',
+  valor: 1.5,
+  passos: ['Recolheu a toalha?', 'Organizou suas coisas?', 'Apagou as luzes?'],
+}
 
 export const AFAZERES_PADRAO: Afazer[] = [
   { id: 'a1', emoji: '🛏️', titulo: 'Arrumar a cama', valor: 1 },
@@ -21,7 +34,7 @@ export const AFAZERES_PADRAO: Afazer[] = [
   { id: 'a7', emoji: '🎒', titulo: 'Arrumar a mochila', valor: 1.5 },
   { id: 'a8', emoji: '🌱', titulo: 'Regar as plantinhas', valor: 1 },
   { id: 'a9', emoji: '🐶', titulo: 'Cuidar do pet', valor: 1 },
-  { id: 'a10', emoji: '🚿', titulo: 'Tomar banho na hora certa', valor: 1 },
+  AFAZER_BANHO,
 ]
 
 export const RECADOS_SUGERIDOS = [
@@ -51,12 +64,20 @@ function migrar(bruto: unknown): Estado {
   const base = estadoNovo()
   if (!bruto || typeof bruto !== 'object') return base
   const e = bruto as Partial<Estado>
+  const afazeres = e.afazeres?.length ? [...e.afazeres] : base.afazeres
+  // quem ja usava o app (versao 1) tinha um banho sem perguntinhas no catalogo:
+  // esse vira o banho novo, em vez de virar um segundo item parecido.
+  if ((e.versao ?? 1) < 2 && !afazeres.some((a) => a.passos?.length)) {
+    const antigo = afazeres.findIndex((a) => /banho/i.test(a.titulo))
+    if (antigo >= 0) afazeres[antigo] = { ...afazeres[antigo], ...AFAZER_BANHO, id: afazeres[antigo].id }
+    else afazeres.push(AFAZER_BANHO)
+  }
   return {
     ...base,
     ...e,
     escala: e.escala ?? {},
     comPapai: e.comPapai ?? {},
-    afazeres: e.afazeres?.length ? e.afazeres : base.afazeres,
+    afazeres,
     listas: e.listas ?? {},
     pagamentos: e.pagamentos ?? [],
     avisos: e.avisos ?? [],
@@ -285,6 +306,7 @@ export function alternarAfazerNaLista(data: string, afazer: Afazer): void {
     else lista.tarefas.push({
       id: novoId('t'), emoji: afazer.emoji, titulo: afazer.titulo,
       valor: afazer.valor, feita: false, conferida: false,
+      passos: passosNovos(afazer.passos),
     })
   })
 }
@@ -353,6 +375,7 @@ export function replicarLista(origem: string, ate: string, modo: ModoReplica, en
           tarefas: base.tarefas.map((t) => ({
             id: novoId('t'), emoji: t.emoji, titulo: t.titulo, valor: t.valor,
             feita: false, conferida: false,
+            passos: passosNovos(t.passos?.map((p) => p.titulo)),
           })),
           enviadaEm: enviar ? Date.now() : undefined,
         }
@@ -366,16 +389,30 @@ export function replicarLista(origem: string, ate: string, modo: ModoReplica, en
 
 // ---------------------------------------------------------------- execucao e carteira
 
+/** Copia as perguntinhas de um afazer para um dia novo, todas por responder. */
+function passosNovos(titulos: string[] | undefined) {
+  return titulos?.length ? titulos.map((titulo) => ({ titulo, feito: false })) : undefined
+}
+
+/** Marca/desmarca uma perguntinha (ex.: "Recolheu a toalha?"). */
+export function alternarPassoTarefa(data: string, id: string, indice: number): void {
+  alterar((e) => {
+    const passo = e.listas[data]?.tarefas.find((x) => x.id === id)?.passos?.[indice]
+    if (passo) passo.feito = !passo.feito
+  })
+}
+
 export function concluirTarefa(data: string, id: string): void {
   alterar((e) => {
     const t = e.listas[data]?.tarefas.find((x) => x.id === id)
     if (!t || t.feita) return
+    if (passosFaltando(t) > 0) return
     t.feita = true
     t.feitaEm = Date.now()
     e.avisos.unshift({
       id: novoId('av'), para: 'kelly', em: Date.now(),
-      titulo: `Anne concluiu: ${t.emoji} ${t.titulo}`,
-      texto: `Aguardando sua conferência • ${t.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}`,
+      titulo: `Anne fez: ${t.emoji} ${t.titulo}`,
+      texto: `A pagar: ${brl(t.valor)} • aguardando sua conferência`,
       lido: false,
     })
   })
@@ -387,6 +424,7 @@ export function desfazerTarefa(data: string, id: string): void {
     if (!t || t.conferida) return
     t.feita = false
     t.feitaEm = undefined
+    for (const p of t.passos ?? []) p.feito = false
   })
 }
 
@@ -431,7 +469,55 @@ export function registrarPagamento(valor: number, descricao: string): void {
     e.avisos.unshift({
       id: novoId('av'), para: 'anne', em: Date.now(),
       titulo: 'Você recebeu a mesada! 💰',
-      texto: `${valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} — ${descricao}`,
+      texto: `${brl(valor)} — ${descricao}`,
+      lido: false,
+    })
+  })
+}
+
+/**
+ * A propria Anne confirma que o dinheiro chegou na mao dela: o cofrinho zera
+ * e a Kelly recebe o aviso do valor.
+ */
+export function confirmarRecebimento(): number {
+  const valor = carteira(estado).saldo
+  if (valor <= 0) return 0
+  alterar((e) => {
+    e.pagamentos.unshift({
+      id: novoId('pg'), em: Date.now(), valor, porAnne: true,
+      descricao: `Anne recebeu em ${curta(chave(new Date()))}`,
+    })
+    e.avisos.unshift({
+      id: novoId('av'), para: 'kelly', em: Date.now(),
+      titulo: 'A Anne confirmou que recebeu! 💰',
+      texto: `${brl(valor)} — o cofrinho dela voltou a zero.`,
+      lido: false,
+    })
+  })
+  return valor
+}
+
+// ---------------------------------------------------------------- papai na cidade
+
+/**
+ * Avisa as duas quando a escala marca folga hoje (Alexandre na cidade).
+ * O id do aviso e' fixo por dia, entao rodar de novo -- ou o outro celular
+ * rodar tambem -- nao duplica nada.
+ */
+export function avisarPapaiNaCidade(): void {
+  const data = hoje()
+  if (!deveAvisarPapai(estado, data)) return
+  alterar((e) => {
+    e.avisos.unshift({
+      id: idAvisoPapai(data, 'anne'), para: 'anne', em: Date.now(),
+      titulo: 'O papai está na cidade hoje! 👨‍✈️',
+      texto: 'É dia de folga dele. Aproveita bastante! 💜',
+      lido: false,
+    })
+    e.avisos.unshift({
+      id: idAvisoPapai(data, 'kelly'), para: 'kelly', em: Date.now(),
+      titulo: 'Alexandre está na cidade hoje 👨‍✈️',
+      texto: 'A escala marca folga — a Anne pode ficar com o papai.',
       lido: false,
     })
   })

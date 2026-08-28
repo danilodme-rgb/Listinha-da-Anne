@@ -1,5 +1,7 @@
 import { lerEscala } from '../src/lib/parser'
 import { aceitaDaNuvem } from '../src/lib/sincronia'
+import { deveAvisarPapai, idAvisoPapai, passosFaltando, podeConcluir } from '../src/lib/regras'
+import type { Estado, TarefaDoDia } from '../src/lib/types'
 
 let falhas = 0
 const eq = (nome: string, obtido: unknown, esperado: unknown) => {
@@ -88,6 +90,50 @@ eq('mudanca local pendente e nuvem mais nova: entra a da nuvem',
   aceitaDaNuvem(400, 300, 200), true)
 eq('mesma hora dos dois lados: nao mexe', aceitaDaNuvem(300, 300, 100), false)
 eq('aparelho novo (nunca publicou) adota a nuvem', aceitaDaNuvem(50, 999, 999), true)
+
+// ---------------------------------------------------------------- papai na cidade
+
+const estadoCom = (escala: Estado['escala'], avisos: Estado['avisos'] = []): Estado => ({
+  versao: 2, atualizadoEm: 0, escala, comPapai: {}, comPapaiAutomatico: true,
+  afazeres: [], listas: {}, pagamentos: [], avisos,
+  config: { pinKelly: null, somConquista: true },
+})
+
+const aviso = (id: string): Estado['avisos'][number] => ({
+  id, para: 'anne', em: 0, titulo: '', texto: '', lido: false,
+})
+
+eq('folga na escala avisa as duas',
+  deveAvisarPapai(estadoCom({ '2025-09-10': { status: 'folga' } }), '2025-09-10'), true)
+eq('dia de voo nao avisa',
+  deveAvisarPapai(estadoCom({ '2025-09-10': { status: 'trabalho' } }), '2025-09-10'), false)
+eq('dia sem escala lida nao avisa', deveAvisarPapai(estadoCom({}), '2025-09-10'), false)
+eq('aviso do dia ja existe: nao repete',
+  deveAvisarPapai(
+    estadoCom({ '2025-09-10': { status: 'folga' } }, [aviso(idAvisoPapai('2025-09-10', 'anne'))]),
+    '2025-09-10',
+  ), false)
+eq('aviso de outro dia nao bloqueia',
+  deveAvisarPapai(
+    estadoCom({ '2025-09-11': { status: 'folga' } }, [aviso(idAvisoPapai('2025-09-10', 'anne'))]),
+    '2025-09-11',
+  ), true)
+
+// ---------------------------------------------------------------- perguntinhas do banho
+
+const banho = (respostas: boolean[]): TarefaDoDia => ({
+  id: 't1', emoji: '🛁', titulo: 'Banho', valor: 1.5, feita: false, conferida: false,
+  passos: ['Recolheu a toalha?', 'Organizou suas coisas?', 'Apagou as luzes?']
+    .map((titulo, i) => ({ titulo, feito: respostas[i] })),
+})
+
+eq('banho sem responder nada', passosFaltando(banho([false, false, false])), 3)
+eq('banho pela metade nao pode concluir', podeConcluir(banho([true, true, false])), false)
+eq('banho respondido pode concluir', podeConcluir(banho([true, true, true])), true)
+eq('tarefa sem perguntinhas pode concluir',
+  podeConcluir({ id: 't2', emoji: '🛏️', titulo: 'Cama', valor: 1, feita: false, conferida: false }), true)
+eq('tarefa ja feita nao conclui de novo',
+  podeConcluir({ id: 't2', emoji: '🛏️', titulo: 'Cama', valor: 1, feita: true, conferida: false }), false)
 
 console.log(falhas === 0 ? '\nTodos os testes passaram.' : `\n${falhas} teste(s) falharam.`)
 process.exit(falhas === 0 ? 0 : 1)

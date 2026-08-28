@@ -47,6 +47,7 @@ export function KellyView({ estado, ano, mes, aoMudarMes, dia, aoMudarDia }: Pro
                   <div className="titulo">{tarefa.titulo}</div>
                   <div className="obs">
                     {curta(data)}{tarefa.feitaEm ? ` às ${horaCurta(tarefa.feitaEm)}` : ''} • {brl(tarefa.valor)}
+                    {!!tarefa.passos?.length && ` • ✓ ${tarefa.passos.length} perguntinhas`}
                   </div>
                 </div>
                 <button className="btn ok pequeno" onClick={() => conferirTarefa(data, tarefa.id)}>
@@ -115,7 +116,10 @@ export function KellyView({ estado, ano, mes, aoMudarMes, dia, aoMudarDia }: Pro
                 aria-pressed={escolhido}
               >
                 <span className="emoji">{a.emoji}</span>
-                <div className="txt"><div className="titulo">{a.titulo}</div></div>
+                <div className="txt">
+                  <div className="titulo">{a.titulo}</div>
+                  {!!a.passos?.length && <div className="obs">❓ {a.passos.length} perguntinhas</div>}
+                </div>
                 <span className="valor">{brl(a.valor)}</span>
                 <span style={{ fontSize: 20, color: escolhido ? 'var(--roxo)' : 'var(--linha)' }}>
                   {escolhido ? '✓' : '+'}
@@ -147,6 +151,9 @@ export function KellyView({ estado, ano, mes, aoMudarMes, dia, aoMudarDia }: Pro
                       <div className="obs">
                         {t.conferida ? '✓ conferida' : 'feita — aguardando conferência'}
                       </div>
+                    )}
+                    {!t.feita && !!t.passos?.length && (
+                      <div className="obs">❓ {t.passos.length} perguntinhas antes de marcar</div>
                     )}
                   </div>
                   <span className="valor">{brl(t.valor)}</span>
@@ -296,39 +303,50 @@ function NovaTarefa({ dia, aoFechar }: { dia: string; aoFechar: () => void }) {
 
 function EditorCatalogo({ estado, aoFechar }: { estado: Estado; aoFechar: () => void }) {
   const [rascunho, setRascunho] = useState<Afazer>({ id: '', emoji: '⭐', titulo: '', valor: 1 })
+  const [abertoPassos, setAbertoPassos] = useState<string | null>(null)
 
   return (
     <Modal titulo="Afazeres que a Anne pode fazer" aoFechar={aoFechar}>
       <p className="ajuda">Esse é o catálogo reutilizável. Mude os valores como preferir.</p>
       <div className="pilha">
         {estado.afazeres.map((a) => (
-          <div className="tarefa" key={a.id}>
-            <input
-              className="campo"
-              style={{ width: 56, textAlign: 'center', padding: 6 }}
-              value={a.emoji}
-              onChange={(e) => salvarAfazer({ ...a, emoji: e.target.value.slice(0, 4) })}
-              aria-label={`Figurinha de ${a.titulo}`}
-            />
-            <input
-              className="campo"
-              style={{ flex: 1, padding: 6 }}
-              value={a.titulo}
-              onChange={(e) => salvarAfazer({ ...a, titulo: e.target.value })}
-              aria-label="Nome do afazer"
-            />
-            <input
-              className="campo"
-              style={{ width: 74, padding: 6 }}
-              inputMode="decimal"
-              value={String(a.valor).replace('.', ',')}
-              onChange={(e) => {
-                const v = Number(e.target.value.replace(',', '.'))
-                if (!Number.isNaN(v)) salvarAfazer({ ...a, valor: v })
-              }}
-              aria-label="Valor"
-            />
-            <button className="btn pequeno perigo" onClick={() => removerAfazer(a.id)} aria-label={`Apagar ${a.titulo}`}>✕</button>
+          <div key={a.id}>
+            <div className="tarefa">
+              <input
+                className="campo"
+                style={{ width: 56, textAlign: 'center', padding: 6 }}
+                value={a.emoji}
+                onChange={(e) => salvarAfazer({ ...a, emoji: e.target.value.slice(0, 4) })}
+                aria-label={`Figurinha de ${a.titulo}`}
+              />
+              <input
+                className="campo"
+                style={{ flex: 1, padding: 6 }}
+                value={a.titulo}
+                onChange={(e) => salvarAfazer({ ...a, titulo: e.target.value })}
+                aria-label="Nome do afazer"
+              />
+              <input
+                className="campo"
+                style={{ width: 74, padding: 6 }}
+                inputMode="decimal"
+                value={String(a.valor).replace('.', ',')}
+                onChange={(e) => {
+                  const v = Number(e.target.value.replace(',', '.'))
+                  if (!Number.isNaN(v)) salvarAfazer({ ...a, valor: v })
+                }}
+                aria-label="Valor"
+              />
+              <button
+                className={`btn pequeno${abertoPassos === a.id ? '' : ' contorno'}`}
+                onClick={() => setAbertoPassos(abertoPassos === a.id ? null : a.id)}
+                aria-label={`Perguntinhas de ${a.titulo}`}
+              >
+                ❓{a.passos?.length ? ` ${a.passos.length}` : ''}
+              </button>
+              <button className="btn pequeno perigo" onClick={() => removerAfazer(a.id)} aria-label={`Apagar ${a.titulo}`}>✕</button>
+            </div>
+            {abertoPassos === a.id && <EditorPassos afazer={a} />}
           </div>
         ))}
       </div>
@@ -357,6 +375,40 @@ function EditorCatalogo({ estado, aoFechar }: { estado: Estado; aoFechar: () => 
         Adicionar ao catálogo
       </button>
     </Modal>
+  )
+}
+
+/**
+ * Perguntinhas de um afazer, uma por linha. E' o que faz o "Banho" virar checklist:
+ * a Anne so' marca a tarefa depois de responder todas.
+ */
+function EditorPassos({ afazer }: { afazer: Afazer }) {
+  const [texto, setTexto] = useState((afazer.passos ?? []).join('\n'))
+
+  const salvar = () => {
+    const linhas = texto.split('\n').map((l) => l.trim()).filter(Boolean)
+    salvarAfazer({ ...afazer, passos: linhas.length ? linhas : undefined })
+  }
+
+  return (
+    <div style={{ padding: '8px 4px 4px' }}>
+      <label className="rotulo" htmlFor={`passos-${afazer.id}`}>Perguntinhas (uma por linha)</label>
+      <textarea
+        id={`passos-${afazer.id}`}
+        className="campo"
+        style={{ minHeight: 84, fontSize: 13 }}
+        placeholder={'Recolheu a toalha?\nOrganizou suas coisas?\nApagou as luzes?'}
+        value={texto}
+        onChange={(e) => setTexto(e.target.value)}
+        onBlur={salvar}
+      />
+      <div className="linha" style={{ gap: 8, marginTop: 6 }}>
+        <p className="ajuda" style={{ flex: 1, margin: 0 }}>
+          A Anne responde todas antes de a tarefa contar como feita.
+        </p>
+        <button className="btn pequeno" onClick={salvar}>Salvar</button>
+      </div>
+    </div>
   )
 }
 
