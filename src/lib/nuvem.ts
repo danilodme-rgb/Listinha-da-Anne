@@ -61,12 +61,56 @@ export function interpretarConfig(texto: string, familia: string): ConfigNuvem |
   }
 }
 
+// ------------------------------------------------------------ link de sincronizacao
+
+function paraBase64(texto: string): string {
+  let bin = ''
+  for (const b of new TextEncoder().encode(texto)) bin += String.fromCharCode(b)
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+function deBase64(texto: string): string {
+  const t = texto.replace(/-/g, '+').replace(/_/g, '/')
+  const bin = atob(t + '='.repeat((4 - (t.length % 4)) % 4))
+  return new TextDecoder().decode(Uint8Array.from(bin, (c) => c.charCodeAt(0)))
+}
+
+/** Endereco que ja carrega a configuracao: abrir no outro celular liga a sincronizacao. */
+export function linkDeSincronizacao(c: ConfigNuvem, base: string): string {
+  return `${base}#sync=${paraBase64(JSON.stringify(c))}`
+}
+
+let veioDeLink = false
+
+/**
+ * Le o `#sync=` do endereco, guarda a configuracao e limpa a barra.
+ * E' como o celular da Anne liga a sincronizacao: o app dela nao tem Ajustes.
+ */
+export function aplicarLinkDeSincronizacao(): void {
+  const marca = '#sync='
+  if (!location.hash.startsWith(marca)) return
+  try {
+    const c = JSON.parse(deBase64(location.hash.slice(marca.length))) as ConfigNuvem
+    if (!c.apiKey || !c.databaseURL || !c.familia) return
+    salvarConfigNuvem(c)
+    veioDeLink = true
+  } catch { /* link estragado: segue sem sincronizar */ }
+  history.replaceState(null, '', location.pathname + location.search)
+}
+
+export function ligadaPeloLink(): boolean {
+  return veioDeLink
+}
+
+// ------------------------------------------------------------ conexao
+
 interface Ganchos {
   aoReceber: (estado: Estado) => void
   aoMudarStatus: (s: StatusNuvem, detalhe?: string) => void
 }
 
 let publicarReal: ((e: Estado) => void) | null = null
+let lerAgora: (() => Promise<Estado | null>) | null = null
 let pendente: Estado | null = null
 
 /** Conecta ao Firebase Realtime Database (carregado sob demanda). */
@@ -99,6 +143,11 @@ export async function iniciarNuvem(config: ConfigNuvem, ganchos: Ganchos): Promi
     )
 
     publicarReal = (estado) => { void bd.set(caminho, estado) }
+    lerAgora = async () => {
+      const snap = await bd.get(caminho)
+      const valor = snap.val() as Estado | null
+      return valor && typeof valor.atualizadoEm === 'number' ? valor : null
+    }
     if (pendente) { publicarReal(pendente); pendente = null }
   } catch (erro) {
     ganchos.aoMudarStatus('erro', erro instanceof Error ? erro.message : String(erro))
@@ -112,4 +161,9 @@ export function publicarNaNuvem(estado: Estado): void {
 
 export function nuvemAtiva(): boolean {
   return publicarReal !== null
+}
+
+/** Le o estado da nuvem uma vez, sob demanda (puxar-para-atualizar). */
+export async function lerDaNuvemAgora(): Promise<Estado | null> {
+  return lerAgora ? lerAgora() : null
 }
