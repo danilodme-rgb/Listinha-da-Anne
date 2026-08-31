@@ -8,6 +8,23 @@ existe arquivo de instruções fora do repositório: no Claude Code na web, o qu
 sozinho é o `CLAUDE.md` do repositório aberto, e qualquer coisa que eu escrevesse fora dele
 sumiria com a sessão. Enquanto for um projeto só, o geral mora aqui.
 
+### Como levar estas regras para outro projeto
+
+**Eu não carrego isto sozinho para outro repositório.** Em cada sessão eu leio o `CLAUDE.md`
+do projeto aberto e nada além disso — não tenho memória entre conversas. Num projeto novo,
+sem um dos três passos abaixo, eu começo sem as regras e o Danilo não tem como perceber:
+
+1. **Copiar as seções 1 a 6** para o `CLAUDE.md` do projeto novo. Funciona sempre e carrega
+   sozinho; o custo é manter as cópias em dia. É o caminho para projeto que vai durar.
+2. **Ponteiro**: uma linha no `CLAUDE.md` do projeto novo mandando anexar
+   `danilodme-rgb/Listinha-da-Anne` e ler estas seções antes de começar. Fonte única, custa
+   um passo no início da sessão.
+3. **Pedir na primeira mensagem**: "usa as diretrizes do Listinha". Serve para tarefa avulsa;
+   depende de ele lembrar, então não vale como combinado permanente.
+
+Quando existir um segundo projeto de verdade, o certo é mover as seções 1 a 6 para um
+repositório próprio (`instrucoes`) e deixar o ponteiro em cada projeto — inclusive neste.
+
 ## 1. Como responder
 
 1. **Toda decisão vem com uma recomendação.** Nunca apresentar opções sem dizer qual eu
