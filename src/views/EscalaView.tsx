@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import type { Estado, Perfil, StatusDia } from '../lib/types'
 import { MESES, chaveDe, curta, diasNoMes, hoje, porExtenso, somaDias } from '../lib/dates'
 import { lerEscala } from '../lib/parser'
+import { emCasaNoMes, emCasaPorMes, emCasaTotal } from '../lib/relatorio'
 import { alternarComPapai, aplicarLeitura, comPapai, definirDia, limparMes } from '../lib/store'
 import { Calendario } from '../components/Calendario'
 import { Modal } from '../components/Modal'
@@ -38,6 +39,13 @@ export function EscalaView({ estado, perfil, ano, mes, aoMudarMes }: Props) {
     }
     return { voando, folga, comPai }
   }, [estado, ano, mes])
+
+  const emCasa = useMemo(() => ({
+    doMes: emCasaNoMes(estado.escala, ano, mes),
+    porMes: emCasaPorMes(estado.escala),
+    total: emCasaTotal(estado.escala),
+  }), [estado.escala, ano, mes])
+  const variosAnos = new Set(emCasa.porMes.map((f) => f.ano)).size > 1
 
   const proximoComPapai = useMemo(() => {
     let k = hoje()
@@ -123,6 +131,65 @@ export function EscalaView({ estado, perfil, ano, mes, aoMudarMes }: Props) {
         </div>
       </div>
 
+      {/* So' no modo mamae: a Anne nao precisa de contabilidade da ausencia do pai. */}
+      {podeEditar && (
+        <div className="cartao">
+          <h3>🏠 Papai em casa</h3>
+          <p className="ajuda">
+            De cada 100 dias com escala lida, quantos ele passou de folga.
+            Só o modo mamãe vê este quadro.
+          </p>
+
+          {emCasa.doMes.lidos === 0 ? (
+            <p className="ajuda" style={{ margin: 0 }}>
+              {MESES[mes]} ainda não tem escala lida — é só colar a escala aqui embaixo.
+            </p>
+          ) : (
+            <>
+              <div className="linha" style={{ alignItems: 'baseline', gap: 8, marginBottom: 6 }}>
+                <span style={{ fontSize: 40, fontWeight: 900, color: 'var(--folga)', letterSpacing: -1 }}>
+                  {emCasa.doMes.percentual}%
+                </span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--tinta-fraca)' }}>
+                  em {MESES[mes].toLowerCase()}
+                </span>
+              </div>
+              <Barra percentual={emCasa.doMes.percentual} />
+              <div style={{ fontSize: 13, color: 'var(--tinta-fraca)', marginTop: 6 }}>
+                🏠 {emCasa.doMes.emCasa} em casa · ✈️ {emCasa.doMes.fora} voando
+                {' '}(de {emCasa.doMes.lidos} {emCasa.doMes.lidos === 1 ? 'dia lido' : 'dias lidos'})
+              </div>
+            </>
+          )}
+
+          {emCasa.porMes.length > 1 && (
+            <div style={{ marginTop: 16 }}>
+              <div style={{
+                fontSize: 11.5, fontWeight: 800, color: 'var(--tinta-fraca)',
+                textTransform: 'uppercase', letterSpacing: 0.4, marginBottom: 8,
+              }}>
+                Mês a mês
+              </div>
+              <div className="pilha" style={{ gap: 9 }}>
+                {emCasa.porMes.map((f) => (
+                  <div key={`${f.ano}-${f.mes}`}>
+                    <div className="linha" style={{ justifyContent: 'space-between', fontSize: 13, fontWeight: 700, marginBottom: 3 }}>
+                      <span>{MESES[f.mes]}{variosAnos ? `/${f.ano}` : ''}</span>
+                      <span style={{ color: 'var(--folga)' }}>{f.percentual}%</span>
+                    </div>
+                    <Barra percentual={f.percentual} />
+                  </div>
+                ))}
+              </div>
+              <div style={{ fontSize: 13, marginTop: 12 }}>
+                No total, <b>{emCasa.total.percentual}%</b> dos {emCasa.total.lidos} dias já lidos —
+                {' '}{emCasa.total.emCasa} em casa e {emCasa.total.fora} voando.
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {podeEditar && (
         <div className="cartao">
           <h3>Escala do Alexandre</h3>
@@ -155,6 +222,19 @@ export function EscalaView({ estado, perfil, ano, mes, aoMudarMes }: Props) {
         />
       )}
     </>
+  )
+}
+
+/** Fatia verde (em casa) sobre o fundo azul (voando). */
+function Barra({ percentual }: { percentual: number }) {
+  return (
+    <div
+      role="img"
+      aria-label={`${percentual}% em casa`}
+      style={{ height: 10, borderRadius: 999, background: 'var(--voo-bg)', overflow: 'hidden' }}
+    >
+      <div style={{ width: `${percentual}%`, height: '100%', background: 'var(--folga)', borderRadius: 999 }} />
+    </div>
   )
 }
 

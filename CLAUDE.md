@@ -120,6 +120,9 @@ Para não redescobrir a cada sessão.
   `/kelly/`. Cada uma tem seu HTML, manifest, ícone e `main-*.tsx`, que passa `perfilFixo`
   para o `App`. Com `perfilFixo` some o botão de troca, as abas são só as do perfil, e o
   link da Kelly pede o PIN na abertura.
+- **Relatório "papai em casa" (`src/lib/relatorio.ts`):** porcentagem de dias de folga, só no
+  modo mamãe (cartão dentro de `EscalaView`, atrás de `podeEditar`). O denominador é "dias com
+  escala lida", não o mês inteiro — mês lido pela metade não pode virar "ele sumiu".
 - **Fluxo do dinheiro:** tarefa feita → aguardando conferência → Kelly confere → entra no
   cofrinho → o saldo baixa por "Registrar pagamento" (Kelly) ou pelo botão "Já recebi meu
   dinheiro!" (Anne, que avisa a Kelly do valor).

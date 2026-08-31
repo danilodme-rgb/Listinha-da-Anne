@@ -227,6 +227,19 @@ O 👨 marca os dias em que a Anne fica com o pai — por padrão, todo dia de f
 Se em algum dia de folga ela ficar em casa (ou vice-versa), toque no dia e ajuste no botão
 *"Anne está / não está com o papai nesse dia"*.
 
+### 🏠 Papai em casa — só a Kelly vê
+
+Ainda na aba **Escala**, mas **só no modo mamãe** (no app da Anne esse quadro não aparece), tem
+o relatório de quanto tempo o Alexandre passou em casa, em porcentagem:
+
+- O número grande é o **mês aberto no calendário**.
+- A barra é verde (em casa) sobre azul (voando) — as mesmas cores do calendário.
+- Abaixo, **mês a mês** de tudo que já foi lido, e o total acumulado.
+
+**O denominador é sempre "dias com escala lida", nunca o mês inteiro.** Dia sem escala não conta
+nem a favor nem contra — senão um mês preenchido pela metade pareceria um mês em que ele sumiu.
+Por isso vale a pena colar a escala de todo mês: o histórico vai ficando mais fiel.
+
 ### Montar a listinha (aba Mamãe)
 
 1. Escolha o dia no calendário (a bolinha rosa marca os dias que já têm lista).

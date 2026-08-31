@@ -1,6 +1,7 @@
 import { lerEscala } from '../src/lib/parser'
 import { aceitaDaNuvem } from '../src/lib/sincronia'
 import { deveAvisarPapai, idAvisoPapai, passosFaltando, podeConcluir } from '../src/lib/regras'
+import { emCasaNoMes, emCasaPorMes, emCasaTotal } from '../src/lib/relatorio'
 import type { Estado, TarefaDoDia } from '../src/lib/types'
 
 let falhas = 0
@@ -181,6 +182,39 @@ eq('tarefa sem perguntinhas pode concluir',
   podeConcluir({ id: 't2', emoji: '🛏️', titulo: 'Cama', valor: 1, feita: false, conferida: false }), true)
 eq('tarefa ja feita nao conclui de novo',
   podeConcluir({ id: 't2', emoji: '🛏️', titulo: 'Cama', valor: 1, feita: true, conferida: false }), false)
+
+// --- relatorio "papai em casa" ---------------------------------------------
+
+const escalaRelatorio = {
+  // setembro/2026: 3 folgas, 1 voo -> 75%
+  '2026-09-01': { status: 'folga' as const },
+  '2026-09-02': { status: 'folga' as const },
+  '2026-09-03': { status: 'trabalho' as const },
+  '2026-09-04': { status: 'folga' as const },
+  // outubro/2026: 1 folga, 3 voos -> 25%
+  '2026-10-01': { status: 'trabalho' as const },
+  '2026-10-02': { status: 'trabalho' as const },
+  '2026-10-03': { status: 'trabalho' as const },
+  '2026-10-04': { status: 'folga' as const },
+}
+
+eq('relatorio: percentual do mes',
+  emCasaNoMes(escalaRelatorio, 2026, 8),
+  { ano: 2026, mes: 8, lidos: 4, emCasa: 3, fora: 1, percentual: 75 })
+
+eq('relatorio: mes sem escala lida nao vira divisao por zero',
+  emCasaNoMes(escalaRelatorio, 2026, 0),
+  { ano: 2026, mes: 0, lidos: 0, emCasa: 0, fora: 0, percentual: 0 })
+
+eq('relatorio: mes a mes, do mais recente para o mais antigo',
+  emCasaPorMes(escalaRelatorio).map((f) => [f.mes, f.percentual]),
+  [[9, 25], [8, 75]])
+
+eq('relatorio: total somado',
+  emCasaTotal(escalaRelatorio),
+  { lidos: 8, emCasa: 4, fora: 4, percentual: 50 })
+
+eq('relatorio: escala vazia', emCasaTotal({}), { lidos: 0, emCasa: 0, fora: 0, percentual: 0 })
 
 console.log(falhas === 0 ? '\nTodos os testes passaram.' : `\n${falhas} teste(s) falharam.`)
 process.exit(falhas === 0 ? 0 : 1)
