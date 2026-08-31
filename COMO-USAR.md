@@ -200,6 +200,24 @@ confere a prévia. O app entende, entre outros:
 Também entende sinônimos: *voo, viagem, reserva, sobreaviso, pernoite, plantão* contam como
 trabalho; *folga, off, livre, descanso, em casa, férias* contam como folga.
 
+#### A tabela "Minha Escala" do sistema dele
+
+Dá para colar a tabela inteira, do jeito que ela sai do sistema da companhia — aquela com as
+colunas *Activty · Checkin · Start · End · Checkout · Dep · Arr*. As regras:
+
+- **FR vira folga.** Todo o resto (voo `AD####`, `RHC05`, `REX`, `Layover`) vira trabalho.
+- Um dia com **qualquer** atividade de trabalho é dia de trabalho, mesmo que a folga da
+  véspera atravesse a madrugada (`FR` das 05:00 às 05:00 do dia seguinte).
+- **Dia que não aparece na tabela fica em branco**, e o app avisa. Costuma ser dia de descanso,
+  mas como a tabela não diz nada sobre ele, o app não inventa: toque no dia e marque na mão.
+- Se aparecer um código que o app não conhece, ele conta como trabalho e mostra o código na
+  lista de "trechos que não entendi".
+- O mês é o que tiver mais dias na tabela — as pontas do mês anterior e do seguinte são
+  descartadas sozinhas.
+
+⚠️ **Precisa ser o texto da tabela** (selecionar e copiar). **Print e PDF que é imagem não
+funcionam** — não tem texto dentro deles para o app ler.
+
 **Se algo não for entendido**, aquele dia **fica em branco** e aparece a mensagem
 *"Ficaram em branco: dia 9"*, junto com o trecho que confundiu o app. Basta tocar no dia no
 calendário e escolher ✈️ ou 🏠 na mão.
@@ -208,6 +226,19 @@ Cores: **azul = papai trabalhando**, **verde = papai de folga**, cinza = sem esc
 O 👨 marca os dias em que a Anne fica com o pai — por padrão, todo dia de folga dele.
 Se em algum dia de folga ela ficar em casa (ou vice-versa), toque no dia e ajuste no botão
 *"Anne está / não está com o papai nesse dia"*.
+
+### 🏠 Papai em casa — só a Kelly vê
+
+Ainda na aba **Escala**, mas **só no modo mamãe** (no app da Anne esse quadro não aparece), tem
+o relatório de quanto tempo o Alexandre passou em casa, em porcentagem:
+
+- O número grande é o **mês aberto no calendário**.
+- A barra é verde (em casa) sobre azul (voando) — as mesmas cores do calendário.
+- Abaixo, **mês a mês** de tudo que já foi lido, e o total acumulado.
+
+**O denominador é sempre "dias com escala lida", nunca o mês inteiro.** Dia sem escala não conta
+nem a favor nem contra — senão um mês preenchido pela metade pareceria um mês em que ele sumiu.
+Por isso vale a pena colar a escala de todo mês: o histórico vai ficando mais fiel.
 
 ### Montar a listinha (aba Mamãe)
 

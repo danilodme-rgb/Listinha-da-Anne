@@ -104,6 +104,15 @@ Para não redescobrir a cada sessão.
   / `aplicarLinkDeSincronizacao` em `src/lib/nuvem.ts`). Ao mexer em Ajustes, lembrar que tudo
   que ficar só lá é inalcançável no celular dela — foi assim que os avisos e a sincronização
   ficaram impossíveis de ligar para a Anne.
+- **Leitor da escala (`src/lib/parser.ts`) tem dois modos.** `lerEscalaDeVoo` tenta primeiro a
+  tabela "Minha Escala" da companhia (linhas com `03 SET. 2026 11:30` e códigos `FR`, `AD####`,
+  `RHC05`, `REX`, `Layover`); se não casar, cai no leitor de texto livre. Regras que custaram
+  para acertar: `FR` é a única folga, atividade de trabalho no dia ganha da folga que atravessa
+  a madrugada, atividade que termina 00:00 não pinta o dia seguinte, e dia ausente da tabela
+  fica em branco em vez de virar folga por dedução.
+- **O PDF que ele manda pode ser só imagem.** O `escala_alexandre.pdf` de set/2026 era um JPEG
+  de 1275×8852 dentro do PDF, sem camada de texto — não dá para ler no app (exigiria OCR
+  offline). O caminho é copiar o texto da tabela no sistema dele.
 - **Merge da nuvem (`src/lib/sincronia.ts`):** aparelho sem mudança local pendente sempre
   aceita o que vem da nuvem, sem comparar relógios. Comparar só `atualizadoEm` fazia um celular
   com a hora adiantada ignorar para sempre o que a Kelly mudava.
@@ -111,6 +120,9 @@ Para não redescobrir a cada sessão.
   `/kelly/`. Cada uma tem seu HTML, manifest, ícone e `main-*.tsx`, que passa `perfilFixo`
   para o `App`. Com `perfilFixo` some o botão de troca, as abas são só as do perfil, e o
   link da Kelly pede o PIN na abertura.
+- **Relatório "papai em casa" (`src/lib/relatorio.ts`):** porcentagem de dias de folga, só no
+  modo mamãe (cartão dentro de `EscalaView`, atrás de `podeEditar`). O denominador é "dias com
+  escala lida", não o mês inteiro — mês lido pela metade não pode virar "ele sumiu".
 - **Fluxo do dinheiro:** tarefa feita → aguardando conferência → Kelly confere → entra no
   cofrinho → o saldo baixa por "Registrar pagamento" (Kelly) ou pelo botão "Já recebi meu
   dinheiro!" (Anne, que avisa a Kelly do valor).
