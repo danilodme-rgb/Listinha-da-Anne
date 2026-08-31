@@ -78,6 +78,53 @@ eq('letras soltas T e F', ler('1 F\n2 T\n3 T').dias, { '1': 'folga', '2': 'traba
 
 eq('texto sem nada legivel', ler('bom dia amor, segue a escala').dias, {})
 
+// --- tabela "Minha Escala" da companhia -------------------------------------
+
+const ESCALA_DE_VOO = [
+  'Activty\tCheckin\tStart\tEnd\tCheckout\tDep\tArr\tAcVer\tDD/CAT\tCrews',
+  'FR\t\t31 AGO. 2026 00:00\t01 SET. 2026 00:00\t\tGRU\tGRU',
+  'FR\t\t01 SET. 2026 00:00\t02 SET. 2026 00:00\t\tGRU\tGRU',
+  'RHC05\t02 SET. 2026 05:00\t02 SET. 2026 05:00\t02 SET. 2026 11:00\t02 SET. 2026 11:00\tCGH\tCGH',
+  'AD4269\t03 SET. 2026 11:30\t03 SET. 2026 12:20\t03 SET. 2026 15:25\t\tCGH\tREC\t32N\tCA\tSCHREDER CA LAZZAROTTO FO',
+  'FR\t\t04 SET. 2026 05:35\t05 SET. 2026 05:35\t\tGRU\tGRU',
+  'AD4232\t05 SET. 2026 04:10\t05 SET. 2026 05:00\t05 SET. 2026 08:00\t\tGRU\tREC\t32Q\tCA\tSCHREDER CA',
+  'Layover\t\t05 SET. 2026 08:00\t06 SET. 2026 19:00\t\tREC\tREC',
+  'AD4451\t\t06 SET. 2026 23:00\t07 SET. 2026 02:45\t07 SET. 2026 03:15\tREC\tMAO\t32Q\tCA\tSCHREDER CA',
+  'ZZ99\t09 SET. 2026 08:00\t09 SET. 2026 08:00\t09 SET. 2026 12:00\t\tGRU\tGRU',
+].join('\n')
+
+const voo = lerEscala(ESCALA_DE_VOO, 0, 2020)
+
+eq('escala de voo: mes vem do proprio texto', [voo.mes, voo.ano, voo.mesDetectado], [8, 2026, true])
+
+eq('escala de voo: FR e folga, atividade e trabalho',
+  voo.dias,
+  { '1': 'folga', '2': 'trabalho', '3': 'trabalho', '4': 'folga',
+    '5': 'trabalho', '6': 'trabalho', '7': 'trabalho', '9': 'trabalho' })
+
+eq('escala de voo: dia sem atividade fica em branco', voo.naoReconhecidos, [8])
+
+eq('escala de voo: codigo desconhecido vira trabalho e e reportado',
+  voo.trechosIgnorados.length, 1)
+
+eq('escala de voo: anotacao com a rota do dia', voo.notas['3'], 'CGH-REC')
+
+eq('escala de voo: layover no meio do caminho entra na rota', voo.notas['6'], 'REC-MAO')
+
+// A folga das 05:35 de um dia as 05:35 do outro nao pode transformar em folga
+// um dia que ja tem voo (dia 5 sai as 05:00 e e' trabalho).
+eq('escala de voo: trabalho ganha da folga que vaza para o dia seguinte',
+  voo.dias['5'], 'trabalho')
+
+// Atividade que termina exatamente a meia-noite nao ocupa o dia seguinte.
+eq('escala de voo: fim a meia-noite nao pinta o dia seguinte',
+  lerEscala([
+    'FR\t\t01 SET. 2026 00:00\t02 SET. 2026 00:00\t\tGRU\tGRU',
+    'AD1111\t03 SET. 2026 08:00\t03 SET. 2026 09:00\t03 SET. 2026 10:00\t\tGRU\tREC',
+  ].join('\n'), 8, 2026).dias,
+  { '1': 'folga', '3': 'trabalho' })
+
+
 // ---------------------------------------------------------------- sincronizacao
 
 // (remoto, local, sincronizado) -> aceita o que veio da nuvem?

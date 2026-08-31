@@ -128,6 +128,8 @@ export function EscalaView({ estado, perfil, ano, mes, aoMudarMes }: Props) {
           <h3>Escala do Alexandre</h3>
           <p className="ajuda">
             Copie a mensagem que ele mandar e cole aqui: o app preenche o mês sozinho.
+            Serve tanto para um recadinho (“01 folga, 02 voo”) quanto para a tabela
+            <b> Minha Escala</b> copiada do sistema dele.
             Os dias que não der para entender ficam em branco e aparecem na lista de avisos.
           </p>
           <div className="linha" style={{ gap: 8 }}>
@@ -177,6 +179,12 @@ function ColarEscala({
         Cole o texto exatamente como ele mandou. Entende formatos como
         <b> “folga dia 1, trabalho dia 2”</b>, <b>“01 - FOLGA”</b> (um por linha),
         <b> “FOLGA: 1,2,3”</b>, intervalos (<b>“3 a 7 trabalho”</b>) e datas (<b>05/09</b>).
+      </p>
+      <p className="ajuda">
+        ✈️ Também entende a tabela <b>Minha Escala</b> do sistema dele, com as linhas
+        <b> FR</b>, <b>Layover</b> e os voos: <b>FR vira folga</b> e todo o resto vira
+        trabalho. Precisa ser o <b>texto</b> da tabela (selecionar e copiar) — foto e
+        print não dão para ler.
       </p>
 
       <textarea

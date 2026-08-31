@@ -200,6 +200,24 @@ confere a prévia. O app entende, entre outros:
 Também entende sinônimos: *voo, viagem, reserva, sobreaviso, pernoite, plantão* contam como
 trabalho; *folga, off, livre, descanso, em casa, férias* contam como folga.
 
+#### A tabela "Minha Escala" do sistema dele
+
+Dá para colar a tabela inteira, do jeito que ela sai do sistema da companhia — aquela com as
+colunas *Activty · Checkin · Start · End · Checkout · Dep · Arr*. As regras:
+
+- **FR vira folga.** Todo o resto (voo `AD####`, `RHC05`, `REX`, `Layover`) vira trabalho.
+- Um dia com **qualquer** atividade de trabalho é dia de trabalho, mesmo que a folga da
+  véspera atravesse a madrugada (`FR` das 05:00 às 05:00 do dia seguinte).
+- **Dia que não aparece na tabela fica em branco**, e o app avisa. Costuma ser dia de descanso,
+  mas como a tabela não diz nada sobre ele, o app não inventa: toque no dia e marque na mão.
+- Se aparecer um código que o app não conhece, ele conta como trabalho e mostra o código na
+  lista de "trechos que não entendi".
+- O mês é o que tiver mais dias na tabela — as pontas do mês anterior e do seguinte são
+  descartadas sozinhas.
+
+⚠️ **Precisa ser o texto da tabela** (selecionar e copiar). **Print e PDF que é imagem não
+funcionam** — não tem texto dentro deles para o app ler.
+
 **Se algo não for entendido**, aquele dia **fica em branco** e aparece a mensagem
 *"Ficaram em branco: dia 9"*, junto com o trecho que confundiu o app. Basta tocar no dia no
 calendário e escolher ✈️ ou 🏠 na mão.

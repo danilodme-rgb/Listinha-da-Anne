@@ -1,5 +1,5 @@
 import type { ResultadoLeitura, StatusDia } from './types'
-import { MESES, diasNoMes } from './dates'
+import { MESES, chave, chaveDe, diasNoMes } from './dates'
 
 /** Remove acentos e coloca em minusculas, preservando o tamanho da string. */
 function normalizar(s: string): string {
@@ -98,6 +98,161 @@ function acharDias(linha: string, mesAlvo: number): { marcas: MarcaDia[]; mesEst
   return { marcas: marcas.sort((a, b) => a.inicio - b.inicio), mesEstranho }
 }
 
+// ---------------------------------------------------------------------------
+// Escala de voo (tabela "Minha Escala" do sistema da companhia)
+//
+// Cada linha e' uma atividade com ate' quatro horarios (Checkin, Start, End,
+// Checkout) no formato "03 SET. 2026 11:30". O codigo da atividade diz o que
+// ela e': FR e' folga, o resto (voo AD####, RHC##, REX, Layover) e' trabalho.
+// ---------------------------------------------------------------------------
+
+const RE_DATA_HORA = /\b(\d{1,2})\s+(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)[a-z]*\.?\s+(\d{4})\s+(\d{1,2}):(\d{2})\b/g
+
+/** Codigo de atividade: "AD4269", "RHC05", "FR", "REX", "Layover". */
+const RE_ATIVIDADE = /\b(?:[a-z]{2,4}\d{2,5}|fr|rex|layover|folga|ferias|feriado)\b/g
+
+/** Codigos que eu sei ler; o resto vira trabalho, mas e' relatado para a Kelly. */
+const RE_CODIGO_CONHECIDO = /^(?:ad\d+|rhc\d+|fr|rex|layover|folga|ferias|feriado)$/
+
+const CODIGOS_DE_FOLGA = /^(?:fr|folga|ferias|feriado)$/
+
+interface Atividade {
+  codigo: string
+  status: StatusDia
+  inicio: Date
+  fim: Date
+  /** Aeroportos da linha (Dep e Arr), quando aparecem. */
+  aeroportos: string[]
+}
+
+/** Dias cobertos por [inicio, fim). Terminar 00:00 nao ocupa o dia seguinte. */
+function diasCobertos(inicio: Date, fim: Date): Date[] {
+  const cursor = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate())
+  const ultimo = new Date(fim.getFullYear(), fim.getMonth(), fim.getDate())
+  if (fim.getHours() === 0 && fim.getMinutes() === 0 && ultimo > cursor) ultimo.setDate(ultimo.getDate() - 1)
+  const dias: Date[] = []
+  while (cursor <= ultimo && dias.length < 45) {
+    dias.push(new Date(cursor))
+    cursor.setDate(cursor.getDate() + 1)
+  }
+  return dias
+}
+
+/** Le a tabela de escala de voo. Devolve null quando o texto nao e' desse formato. */
+function lerEscalaDeVoo(texto: string): ResultadoLeitura | null {
+  const norm = normalizar(texto)
+
+  const datas: Array<{ inicio: number; fim: number; quando: Date }> = []
+  RE_DATA_HORA.lastIndex = 0
+  let m: RegExpExecArray | null
+  while ((m = RE_DATA_HORA.exec(norm))) {
+    const mes = ABREV_MESES.indexOf(m[2])
+    if (mes < 0) continue
+    datas.push({
+      inicio: m.index,
+      fim: m.index + m[0].length,
+      quando: new Date(Number(m[3]), mes, Number(m[1]), Number(m[4]), Number(m[5])),
+    })
+  }
+  if (datas.length < 3) return null
+
+  const marcos: Array<{ pos: number; codigo: string }> = []
+  RE_ATIVIDADE.lastIndex = 0
+  while ((m = RE_ATIVIDADE.exec(norm))) marcos.push({ pos: m.index, codigo: m[0] })
+  if (marcos.length < 2) return null
+
+  const atividades: Atividade[] = []
+  const desconhecidos = new Set<string>()
+
+  for (let i = 0; i < marcos.length; i++) {
+    const de = marcos[i].pos
+    const ate = i + 1 < marcos.length ? marcos[i + 1].pos : norm.length
+    const dentro = datas.filter((d) => d.inicio >= de && d.inicio < ate)
+    if (dentro.length === 0) continue
+
+    const codigo = marcos[i].codigo
+    if (!RE_CODIGO_CONHECIDO.test(codigo)) desconhecidos.add(codigo.toUpperCase())
+
+    const instantes = dentro.map((d) => d.quando.getTime())
+    const ultimaData = dentro[dentro.length - 1]
+    // Dep e Arr vem logo depois dos horarios, como siglas de tres letras.
+    const sobra = texto.slice(ultimaData.fim, ate)
+    const aeroportos = (sobra.match(/\b[A-Z]{3}\b/g) ?? []).slice(0, 2)
+
+    atividades.push({
+      codigo,
+      status: CODIGOS_DE_FOLGA.test(codigo) ? 'folga' : 'trabalho',
+      inicio: new Date(Math.min(...instantes)),
+      fim: new Date(Math.max(...instantes)),
+      aeroportos,
+    })
+  }
+  if (atividades.length === 0) return null
+
+  // Um dia com qualquer atividade de trabalho e' dia de trabalho: a folga que
+  // "vaza" para a manha seguinte (FR das 05:00 as 05:00) nao vale como folga.
+  interface Dia { trabalho: boolean; folga: boolean; aeroportos: string[] }
+  const porDia = new Map<string, Dia>()
+  const contagemMes = new Map<string, number>()
+
+  for (const a of atividades) {
+    for (const d of diasCobertos(a.inicio, a.fim)) {
+      const k = chave(d)
+      const dia = porDia.get(k) ?? { trabalho: false, folga: false, aeroportos: [] }
+      if (a.status === 'trabalho') {
+        dia.trabalho = true
+        for (const sigla of a.aeroportos) {
+          if (dia.aeroportos[dia.aeroportos.length - 1] !== sigla) dia.aeroportos.push(sigla)
+        }
+      } else dia.folga = true
+      porDia.set(k, dia)
+      const mesAno = `${d.getFullYear()}-${d.getMonth()}`
+      contagemMes.set(mesAno, (contagemMes.get(mesAno) ?? 0) + 1)
+    }
+  }
+
+  // A tabela costuma pegar a ponta do mes anterior e a do seguinte; fica o mes
+  // com mais dias cobertos.
+  let alvo = ''
+  let melhor = -1
+  for (const [mesAno, quantos] of contagemMes) {
+    if (quantos > melhor) { melhor = quantos; alvo = mesAno }
+  }
+  const [ano, mes] = alvo.split('-').map(Number)
+
+  const dias: Record<string, StatusDia> = {}
+  const notas: Record<string, string> = {}
+  const citados: number[] = []
+  for (let d = 1; d <= diasNoMes(ano, mes); d++) {
+    const dia = porDia.get(chaveDe(ano, mes, d))
+    if (!dia) continue
+    citados.push(d)
+    dias[String(d)] = dia.trabalho ? 'trabalho' : 'folga'
+    if (dia.trabalho && dia.aeroportos.length > 0) notas[String(d)] = dia.aeroportos.slice(0, 5).join('-')
+  }
+
+  const naoReconhecidos: number[] = []
+  if (citados.length > 0) {
+    const min = Math.min(...citados)
+    const max = Math.max(...citados)
+    const cobreMes = min <= 3 && max >= diasNoMes(ano, mes) - 5
+    const de = cobreMes ? 1 : min
+    const ate = cobreMes ? diasNoMes(ano, mes) : max
+    for (let d = de; d <= ate; d++) if (!citados.includes(d)) naoReconhecidos.push(d)
+  }
+
+  return {
+    dias,
+    notas,
+    naoReconhecidos,
+    trechosIgnorados: [...desconhecidos].slice(0, 8).map((c) => `${c} (não conheço esse código; marquei como trabalho)`),
+    conflitos: [],
+    mes,
+    ano,
+    mesDetectado: true,
+  }
+}
+
 const RE_LIGACAO = /^[\s\-–—:=.,;/|()[\]]*(?:(?:dia|dias|no|nos|de|do|em|e|os|as)[\s\-–—:=.,;]*)*$/
 
 /** O trecho entre um dia e uma palavra-chave e' so' pontuacao/ligacao? */
@@ -107,11 +262,16 @@ function colados(linha: string, a: number, b: number): boolean {
 }
 
 /**
- * Le uma escala colada como texto livre.
- * Aceita "folga dia 1, trabalho dia 2", "01 - FOLGA" por linha,
- * "FOLGA: 1,2,3  VOO: 4,5", intervalos ("3 a 7") e datas ("05/09").
+ * Le uma escala colada.
+ * Primeiro tenta a tabela "Minha Escala" da companhia (FR = folga, voo =
+ * trabalho); se nao for esse formato, cai no texto livre: "folga dia 1,
+ * trabalho dia 2", "01 - FOLGA" por linha, "FOLGA: 1,2,3  VOO: 4,5",
+ * intervalos ("3 a 7") e datas ("05/09").
  */
 export function lerEscala(texto: string, mesPadrao: number, anoPadrao: number): ResultadoLeitura {
+  const daCompanhia = lerEscalaDeVoo(texto)
+  if (daCompanhia) return daCompanhia
+
   const bruto = normalizar(texto)
   const cabecalho = detectarMes(bruto)
   const mes = cabecalho ? cabecalho.mes : mesPadrao
