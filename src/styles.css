@@ -377,3 +377,20 @@ html, body { overscroll-behavior-y: contain; }
 }
 .puxar .rodinha { animation: girar 0.9s linear infinite; }
 @keyframes girar { to { transform: rotate(360deg); } }
+
+/* aviso rapido antes de recarregar com a versao nova */
+.atualizando {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  background: var(--roxo);
+  color: #fff;
+  font-weight: 800;
+  font-size: 14px;
+  padding: 11px 18px;
+  border-radius: 999px;
+  box-shadow: 0 10px 30px rgba(70, 40, 140, 0.3);
+  white-space: nowrap;
+  z-index: 70;
+}

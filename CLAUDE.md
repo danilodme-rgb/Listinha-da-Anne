@@ -98,6 +98,22 @@ Para não redescobrir a cada sessão.
   `python3 scripts/gen_icons.py anne` reduz o arquivo para 192/512/maskable (leitor de PNG e
   redução por média de área estão no próprio script, sem dependência externa). Os ícones do
   endereço principal e da Kelly continuam desenhados em código, no mesmo arquivo.
+- **Atualização automática dos três apps (`src/lib/atualizacao.ts` + `scripts/sw.js`):** o
+  celular guarda o app instalado, então publicar no Pages não bastava — sem isso ele seguia
+  abrindo a versão antiga por dias. Três armadilhas já resolvidas, não desfazer:
+  1. **`sw.js` precisa mudar de bytes a cada build.** Ele mora em `scripts/sw.js` (fora de
+     `public/`) e o plugin `sw-carimbado` do `vite.config.ts` troca `__VERSAO__` pelo carimbo
+     do build (`GITHUB_SHA` no CI, data-hora local fora dele). Arquivo idêntico = navegador
+     nunca percebe versão nova.
+  2. **`controllerchange` também dispara na primeira instalação.** Recarregar ali seria susto
+     sem motivo; por isso só recarrega quando `updatefound` chegou com `registration.active`
+     já existindo (`deveRecarregar`, com teste em `scripts/testes.ts`).
+  3. **O Pages guarda o HTML por ~10 minutos.** Abertura de página é buscada com
+     `cache: 'reload'`: HTML velho aponta para `.js` que a publicação nova já apagou (tela
+     branca). O nome do cache é fixo de propósito — cache novo e vazio a cada versão deixaria
+     o app sem nada para mostrar se a internet caísse logo depois de atualizar.
+  Recarregar é seguro porque `alterar` (store.ts) grava no `localStorage` na hora. Ajustes
+  mostra o carimbo da versão e tem o botão "Procurar novidade" (só no app da Kelly).
 - **Perfis:** `kelly` (monta e confere) e `anne` (executa). PIN opcional protege o modo mamãe.
 - **O app da Anne não tem Ajustes, de propósito.** Ela liga a sincronização abrindo um link
   `.../anne/#sync=<config em base64>`, gerado em Ajustes no app da Kelly (`linkDeSincronizacao`
