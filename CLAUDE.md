@@ -2,6 +2,12 @@
 
 Combinado com o Danilo. Valem para toda sessão neste repositório.
 
+**As seções 1 a 6 são gerais** — não têm nada de específico deste app e devem ser copiadas
+para o `CLAUDE.md` do próximo projeto. Só o **Contexto técnico**, no fim, é daqui. Hoje não
+existe arquivo de instruções fora do repositório: no Claude Code na web, o que carrega
+sozinho é o `CLAUDE.md` do repositório aberto, e qualquer coisa que eu escrevesse fora dele
+sumiria com a sessão. Enquanto for um projeto só, o geral mora aqui.
+
 ## 1. Como responder
 
 1. **Toda decisão vem com uma recomendação.** Nunca apresentar opções sem dizer qual eu
@@ -31,6 +37,12 @@ Combinado com o Danilo. Valem para toda sessão neste repositório.
    escopo é decisão dele, não minha.
 10. **`npm test` e `npm run build` verdes antes de qualquer push.** Sem exceção.
 11. **Mudança visual → rodar no navegador e mandar print.** Screenshot vale mais que descrição.
+11b. **Comportamento do navegador se prova no ciclo real, não no teste unitário.** Service
+    worker, atualização do app, foco, rede caindo, instalação na tela inicial: teste de
+    função pura passa verde com a lógica errada. Rodar o ciclo inteiro (publicar versão
+    nova com o app aberto, derrubar a rede, voltar do segundo plano) antes de dizer que
+    funciona. Custou uma rodada: `deveRecarregar` estava verde no `npm test` e não
+    recarregava nada no navegador.
 12. Textos do app são para a Anne (8 anos) e para a Kelly: frases curtas, emoji como pista
     visual, zero jargão técnico. Valores em R$ formatados em pt-BR.
 12b. **Nada de imagem de terceiros versionada.** O repositório é público; foto de artista ou
@@ -47,6 +59,13 @@ Combinado com o Danilo. Valem para toda sessão neste repositório.
 15. **Falhou → ler o log/evidência antes de propor solução.** Nunca adivinhar causa. Se não há
     log, usar o padrão da falha (duração, ausência de runner, etc.) e dizer que é inferência.
 16. Armadilha resolvida vira registro — aqui ou no `COMO-USAR.md` — para não custar duas vezes.
+16b. **Todo descuido corrigido gera duas perguntas, não uma.** (a) Qual armadilha técnica
+    registrar no Contexto técnico? (b) Qual regra de processo teria evitado o descuido? A
+    (b) é a que eu costumo pular — em oito entregas o Contexto técnico quase dobrou e as
+    diretrizes mudaram uma vez só. Se a resposta de (b) existir, ela entra nas seções 1 a 6
+    na mesma entrega, não "depois".
+16c. **O registro entra no mesmo commit da correção.** Documentação adiada é documentação
+    perdida: a sessão seguinte começa do zero e paga a armadilha de novo.
 
 ## 5. Economia de token
 
