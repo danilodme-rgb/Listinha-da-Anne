@@ -1,23 +1,104 @@
 # Diretrizes de trabalho — Listinha da Anne
 
-**Antes de começar, anexe `danilodme-rgb/instrucoes` e leia o `CLAUDE.md` dele.** São as
-diretrizes gerais combinadas com o Danilo — como responder, o que verificar antes de afirmar,
-o que registrar — e valem aqui. Elas moram lá porque valem para todos os projetos; este
-arquivo guarda só o que é específico deste app.
+Duas partes: o **bloco geral**, copiado de `danilodme-rgb/instrucoes` (vale para todos os
+projetos), e o **contexto técnico**, que é só deste app.
 
-Regra geral nova vai para o `instrucoes`, não para cá. Armadilha técnica deste app vai para o
-Contexto técnico, aqui embaixo. As duas entram no mesmo commit da correção.
+**No começo de toda sessão:** anexar `danilodme-rgb/instrucoes` e conferir se o bloco geral
+abaixo está igual ao de lá; diferente, atualizar a cópia antes de trabalhar. Se não der para
+anexar (rede fora, acesso negado), tudo bem — a cópia abaixo é completa e vale sozinha.
 
-## Se não der para anexar (rede fora, acesso negado), o mínimo é este
+**Toda lição aprendida vai nos dois arquivos, no mesmo commit da correção:** a regra em
+`instrucoes` (e daqui por cópia), o detalhe técnico no Contexto técnico, aqui embaixo. O hook
+de Stop cobra isso sozinho.
 
-1. Toda decisão vem com uma recomendação minha e o porquê.
-2. Toda resposta termina com resumo: o que ficou pronto, o que falta, o que é a vez dele
-   fazer. Ação manual dele vem numerada e com link direto.
-3. Separar o que eu verifiquei do que eu suponho. Antes de afirmar que funciona, rodar.
-4. `npm test` e `npm run build` verdes antes de qualquer push — e comportamento de navegador
-   se prova no ciclo real, não no teste unitário.
-5. Entregar a tarefa inteira; o que ficou de fora, dizer qual e por quê.
-6. Descuido corrigido vira registro na mesma entrega.
+---
+
+<!-- inicio-geral -->
+
+> **Bloco geral copiado de `instrucoes@b0fa3ce`.** Não editar aqui: regra nova entra
+> primeiro em `danilodme-rgb/instrucoes` e volta para cá por cópia. Cópia diferente da
+> fonte, atualizo esta antes de trabalhar.
+
+## 1. Como responder
+
+1. **Toda decisão vem com uma recomendação.** Nunca apresentar opções sem dizer qual eu
+   escolheria e por quê (uma linha de justificativa). Se as opções forem equivalentes, dizer
+   isso explicitamente e escolher mesmo assim.
+2. **Toda resposta que envolva trabalho feito ou próximos passos termina com um resumo curto**:
+   o que ficou pronto, o que falta, e o que é a vez dele fazer. Tabela quando forem 3+ itens.
+3. **Ação manual dele vem isolada, numerada e com link direto.** Nunca misturada no meio da
+   explicação.
+4. Português do Brasil. Tom direto, sem preâmbulo.
+
+## 2. Confiabilidade da informação
+
+5. **Separar o que eu verifiquei do que eu suponho.** Se não rodei/não olhei, dizer "não
+   verifiquei" — não apresentar como fato.
+6. **Ser explícito sobre o que eu não consigo enxergar**: configurações de contas e serviços,
+   o celular dele, painéis de terceiros. Quando algo depender disso, dizer "não consigo ver X,
+   o que eu vejo é Y" — em vez de inferir e apresentar como certeza.
+7. **Antes de afirmar que funciona, rodar.** Teste, build, ou o programa de verdade. "Deve
+   funcionar" não é entrega.
+8. **Errei → correção curta e explícita, com o impacto prático.** Sem rodeios e sem
+   autoflagelo. Uma vez, e segue.
+
+## 3. Excelência no produto
+
+9. Entregar a tarefa inteira. Se alguma parte ficou de fora, dizer **qual e por quê** — reduzir
+   escopo é decisão dele, não minha.
+10. **Testes e build do projeto verdes antes de qualquer push.** Sem exceção. Se o projeto
+    ainda não tem esses comandos, dizer isso em vez de pular a verificação.
+11. **Mudança visual → rodar e mandar print.** Screenshot vale mais que descrição.
+11b. **Comportamento de ambiente se prova no ciclo real, não no teste unitário.** Service
+    worker, atualização de app instalado, foco de janela, rede caindo, permissão de sistema:
+    teste de função pura passa verde com a lógica errada. Rodar o ciclo inteiro antes de
+    dizer que funciona. Caso real: uma função de "deve recarregar?" passou nos testes e o app
+    não recarregava nada no navegador.
+12. **Texto de produto é para quem vai usar, não para mim.** Frases curtas, zero jargão
+    técnico, formatos locais (R$, datas em pt-BR). Quando o usuário for criança, mais curto
+    ainda e emoji como pista visual.
+12b. **Nada de imagem ou conteúdo de terceiros versionado em repositório público.** Foto de
+    pessoa real também não. Arte gerada em código ou desenhada; material pessoal fica no
+    aparelho.
+
+## 4. Evitar retrabalho
+
+13. **Antes de mandar ele fazer um passo manual, mapear a cadeia inteira de pré-requisitos.**
+    Caso real: um deploy travado porque a regra de branch de um ambiente apontava para o
+    branch padrão antigo — trocar o padrão não era "arrumação", era bloqueio.
+14. **Não classificar passo como "opcional" ou "só organização" sem ter certeza.** Na dúvida:
+    "não sei se isso bloqueia — faça antes por segurança".
+15. **Falhou → ler o log/evidência antes de propor solução.** Nunca adivinhar causa. Se não há
+    log, usar o padrão da falha (duração, ausência de execução, etc.) e dizer que é inferência.
+16. Armadilha resolvida vira registro — no projeto, ou aqui se for geral — para não custar
+    duas vezes.
+16b. **Todo descuido corrigido gera duas perguntas, não uma.** (a) Qual armadilha técnica
+    registrar? (b) Qual regra de processo teria evitado o descuido? A (b) é a que eu costumo
+    pular: num projeto real o contexto técnico quase dobrou em oito entregas enquanto as
+    regras de processo mudaram uma vez só. Se a (b) existir, entra nas seções 1 a 6 na mesma
+    entrega, não "depois" — e a (a) entra no `CLAUDE.md` do projeto. Uma lição nunca é
+    registrada só de um lado.
+16c. **O registro entra no mesmo commit da correção.** Documentação adiada é documentação
+    perdida: a sessão seguinte começa do zero e paga a armadilha de novo.
+
+## 5. Economia de token
+
+17. Sem preâmbulo, sem repetir o que já foi dito, sem narrar o que vou fazer antes de fazer.
+18. Ler só o trecho necessário do arquivo, não o arquivo inteiro.
+19. Não reler arquivo que acabei de editar para "conferir".
+20. Log e print: só o pedaço relevante.
+21. Agrupar chamadas independentes em paralelo em vez de uma por vez.
+
+## 6. Quando sugerir nova conversa
+
+22. **Avisar proativamente** quando: (a) o assunto mudar para algo independente do que veio
+    antes, (b) uma etapa grande fechar e a próxima não depender do histórico, ou (c) eu
+    perceber que estou carregando muito contexto antigo para pouca coisa nova.
+23. Ao sugerir, **entregar junto o resumo de transporte**: estado atual, decisões já tomadas e
+    o que pedir na conversa nova. Ele não deve precisar reconstruir nada.
+24. É sugestão, não interrupção: se ele quiser seguir, seguimos.
+
+<!-- fim-geral -->
 
 ---
 
@@ -104,11 +185,16 @@ Para não redescobrir a cada sessão.
   conclui depois de responder todas (é o caso do 🛁 Banho: toalha, coisas, luzes). Kelly
   edita as perguntas em ⚙️ Editar afazeres.
 - **Hook de Stop (`.claude/settings.json` + `.claude/verificar.sh`):** ao encerrar uma sessão
-  que mexeu em código, o harness roda `npm test` e `npm run build` sozinho e **bloqueia o
-  encerramento** se algo estiver vermelho. Existe porque a regra dos testes verdes dependia de
-  eu lembrar dela. Detalhes que custaram teste: `git diff` não enxerga arquivo novo (usar
-  `git status --porcelain`), e em clone raso de um branch só não existe `origin/main` para
-  comparar — nesse caso ele verifica assim mesmo, porque não verificar é o erro pior.
+  que mexeu em código, o harness faz duas cobranças sozinho, em ordem:
+  1. roda `npm test` e `npm run build`, e **bloqueia o encerramento** se algo estiver vermelho;
+  2. se o `CLAUDE.md` não foi tocado, **bloqueia uma vez** pedindo a lição aprendida (aqui e no
+     `instrucoes`) — ou uma frase dizendo de propósito que não houve lição.
+  Existe porque as duas regras dependiam de eu lembrar delas. Detalhes que custaram teste:
+  `git diff` não enxerga arquivo novo (usar `git status --porcelain`); em clone raso de um
+  branch só não existe `origin/main` para comparar, e aí ele verifica assim mesmo, porque não
+  verificar é o erro pior; e a cobrança de registro **só pode bloquear uma vez** — o segundo
+  bloqueio seria laço infinito quando de fato não houve lição, por isso ela olha
+  `stop_hook_active` na entrada do hook e na segunda parada só avisa.
 - **Arquivos-chave:** `src/lib/parser.ts` (leitor da escala), `src/lib/store.ts` (estado e
   ações), `src/views/` (uma tela por aba).
 - **Documentação para o usuário:** `COMO-USAR.md` — atualizar quando algo mudar para ele.
