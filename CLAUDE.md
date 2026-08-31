@@ -1,105 +1,23 @@
 # Diretrizes de trabalho — Listinha da Anne
 
-Combinado com o Danilo. Valem para toda sessão neste repositório.
+**Antes de começar, anexe `danilodme-rgb/instrucoes` e leia o `CLAUDE.md` dele.** São as
+diretrizes gerais combinadas com o Danilo — como responder, o que verificar antes de afirmar,
+o que registrar — e valem aqui. Elas moram lá porque valem para todos os projetos; este
+arquivo guarda só o que é específico deste app.
 
-**As seções 1 a 6 são gerais** — não têm nada de específico deste app e devem ser copiadas
-para o `CLAUDE.md` do próximo projeto. Só o **Contexto técnico**, no fim, é daqui. Hoje não
-existe arquivo de instruções fora do repositório: no Claude Code na web, o que carrega
-sozinho é o `CLAUDE.md` do repositório aberto, e qualquer coisa que eu escrevesse fora dele
-sumiria com a sessão. Enquanto for um projeto só, o geral mora aqui.
+Regra geral nova vai para o `instrucoes`, não para cá. Armadilha técnica deste app vai para o
+Contexto técnico, aqui embaixo. As duas entram no mesmo commit da correção.
 
-### Como levar estas regras para outro projeto
+## Se não der para anexar (rede fora, acesso negado), o mínimo é este
 
-**Eu não carrego isto sozinho para outro repositório.** Em cada sessão eu leio o `CLAUDE.md`
-do projeto aberto e nada além disso — não tenho memória entre conversas. Num projeto novo,
-sem um dos três passos abaixo, eu começo sem as regras e o Danilo não tem como perceber:
-
-1. **Copiar as seções 1 a 6** para o `CLAUDE.md` do projeto novo. Funciona sempre e carrega
-   sozinho; o custo é manter as cópias em dia. É o caminho para projeto que vai durar.
-2. **Ponteiro**: uma linha no `CLAUDE.md` do projeto novo mandando anexar
-   `danilodme-rgb/Listinha-da-Anne` e ler estas seções antes de começar. Fonte única, custa
-   um passo no início da sessão.
-3. **Pedir na primeira mensagem**: "usa as diretrizes do Listinha". Serve para tarefa avulsa;
-   depende de ele lembrar, então não vale como combinado permanente.
-
-Quando existir um segundo projeto de verdade, o certo é mover as seções 1 a 6 para um
-repositório próprio (`instrucoes`) e deixar o ponteiro em cada projeto — inclusive neste.
-
-## 1. Como responder
-
-1. **Toda decisão vem com uma recomendação.** Nunca apresentar opções sem dizer qual eu
-   escolheria e por quê (uma linha de justificativa). Se as opções forem equivalentes, dizer
-   isso explicitamente e escolher mesmo assim.
-2. **Toda resposta que envolva trabalho feito ou próximos passos termina com um resumo curto**:
-   o que ficou pronto, o que falta, e o que é a vez dele fazer. Tabela quando forem 3+ itens.
-3. **Ação manual dele vem isolada, numerada e com link direto.** Nunca misturada no meio da
-   explicação.
-4. Português do Brasil. Tom direto, sem preâmbulo.
-
-## 2. Confiabilidade da informação
-
-5. **Separar o que eu verifiquei do que eu suponho.** Se não rodei/não olhei, dizer "não
-   verifiquei" — não apresentar como fato.
-6. **Ser explícito sobre o que eu não consigo enxergar**: configurações do GitHub (Settings,
-   Pages, Environments), o celular dele, a conta do Firebase. Quando algo depender disso, dizer
-   "não consigo ver X, o que eu vejo é Y" — em vez de inferir e apresentar como certeza.
-7. **Antes de afirmar que funciona, rodar.** Teste, build ou o app no navegador. "Deve
-   funcionar" não é entrega.
-8. **Errei → correção curta e explícita, com o impacto prático.** Sem rodeios e sem
-   autoflagelo. Uma vez, e segue.
-
-## 3. Excelência no produto
-
-9. Entregar a tarefa inteira. Se alguma parte ficou de fora, dizer **qual e por quê** — reduzir
-   escopo é decisão dele, não minha.
-10. **`npm test` e `npm run build` verdes antes de qualquer push.** Sem exceção.
-11. **Mudança visual → rodar no navegador e mandar print.** Screenshot vale mais que descrição.
-11b. **Comportamento do navegador se prova no ciclo real, não no teste unitário.** Service
-    worker, atualização do app, foco, rede caindo, instalação na tela inicial: teste de
-    função pura passa verde com a lógica errada. Rodar o ciclo inteiro (publicar versão
-    nova com o app aberto, derrubar a rede, voltar do segundo plano) antes de dizer que
-    funciona. Custou uma rodada: `deveRecarregar` estava verde no `npm test` e não
-    recarregava nada no navegador.
-12. Textos do app são para a Anne (8 anos) e para a Kelly: frases curtas, emoji como pista
-    visual, zero jargão técnico. Valores em R$ formatados em pt-BR.
-12b. **Nada de imagem de terceiros versionada.** O repositório é público; foto de artista ou
-    de pessoa real não entra nele. Arte do app é desenhada (ver `scripts/gen_icons.py`), e
-    foto pessoal fica no aparelho, via `src/lib/fotos.ts`.
-
-## 4. Evitar retrabalho
-
-13. **Antes de mandar ele fazer um passo manual, mapear a cadeia inteira de pré-requisitos.**
-    Exemplo real: o environment `github-pages` só aceita deploy do branch padrão — então trocar
-    o default branch não era "arrumação", era bloqueio. Errei nisso uma vez; não repetir.
-14. **Não classificar passo como "opcional" ou "só organização" sem ter certeza.** Na dúvida:
-    "não sei se isso bloqueia — faça antes por segurança".
-15. **Falhou → ler o log/evidência antes de propor solução.** Nunca adivinhar causa. Se não há
-    log, usar o padrão da falha (duração, ausência de runner, etc.) e dizer que é inferência.
-16. Armadilha resolvida vira registro — aqui ou no `COMO-USAR.md` — para não custar duas vezes.
-16b. **Todo descuido corrigido gera duas perguntas, não uma.** (a) Qual armadilha técnica
-    registrar no Contexto técnico? (b) Qual regra de processo teria evitado o descuido? A
-    (b) é a que eu costumo pular — em oito entregas o Contexto técnico quase dobrou e as
-    diretrizes mudaram uma vez só. Se a resposta de (b) existir, ela entra nas seções 1 a 6
-    na mesma entrega, não "depois".
-16c. **O registro entra no mesmo commit da correção.** Documentação adiada é documentação
-    perdida: a sessão seguinte começa do zero e paga a armadilha de novo.
-
-## 5. Economia de token
-
-17. Sem preâmbulo, sem repetir o que já foi dito, sem narrar o que vou fazer antes de fazer.
-18. Ler só o trecho necessário do arquivo, não o arquivo inteiro.
-19. Não reler arquivo que acabei de editar para "conferir".
-20. Log e print: só o pedaço relevante.
-21. Agrupar chamadas independentes em paralelo em vez de uma por vez.
-
-## 6. Quando sugerir nova conversa
-
-22. **Avisar proativamente** quando: (a) o assunto mudar para algo independente do que veio
-    antes, (b) uma etapa grande fechar e a próxima não depender do histórico, ou (c) eu
-    perceber que estou carregando muito contexto antigo para pouca coisa nova.
-23. Ao sugerir, **entregar junto o resumo de transporte**: estado atual, decisões já tomadas e
-    o que pedir na conversa nova. Ele não deve precisar reconstruir nada.
-24. É sugestão, não interrupção: se ele quiser seguir, seguimos.
+1. Toda decisão vem com uma recomendação minha e o porquê.
+2. Toda resposta termina com resumo: o que ficou pronto, o que falta, o que é a vez dele
+   fazer. Ação manual dele vem numerada e com link direto.
+3. Separar o que eu verifiquei do que eu suponho. Antes de afirmar que funciona, rodar.
+4. `npm test` e `npm run build` verdes antes de qualquer push — e comportamento de navegador
+   se prova no ciclo real, não no teste unitário.
+5. Entregar a tarefa inteira; o que ficou de fora, dizer qual e por quê.
+6. Descuido corrigido vira registro na mesma entrega.
 
 ---
 
@@ -185,6 +103,12 @@ Para não redescobrir a cada sessão.
 - **Tarefa com perguntinhas:** `Afazer.passos` vira `TarefaDoDia.passos` no dia. A Anne só
   conclui depois de responder todas (é o caso do 🛁 Banho: toalha, coisas, luzes). Kelly
   edita as perguntas em ⚙️ Editar afazeres.
+- **Hook de Stop (`.claude/settings.json` + `.claude/verificar.sh`):** ao encerrar uma sessão
+  que mexeu em código, o harness roda `npm test` e `npm run build` sozinho e **bloqueia o
+  encerramento** se algo estiver vermelho. Existe porque a regra dos testes verdes dependia de
+  eu lembrar dela. Detalhes que custaram teste: `git diff` não enxerga arquivo novo (usar
+  `git status --porcelain`), e em clone raso de um branch só não existe `origin/main` para
+  comparar — nesse caso ele verifica assim mesmo, porque não verificar é o erro pior.
 - **Arquivos-chave:** `src/lib/parser.ts` (leitor da escala), `src/lib/store.ts` (estado e
   ações), `src/views/` (uma tela por aba).
 - **Documentação para o usuário:** `COMO-USAR.md` — atualizar quando algo mudar para ele.
