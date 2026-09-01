@@ -71,6 +71,8 @@ export interface Estado {
   atualizadoEm: number
   /** chave 'AAAA-MM-DD' -> dia da escala */
   escala: Record<string, DiaEscala>
+  /** Observacao da Kelly no dia (ex.: "papai chega 13h e sai 20h"). */
+  observacoes: Record<string, string>
   /**
    * chave 'AAAA-MM-DD' -> true/false quando a Kelly marca manualmente.
    * Sem marcacao manual vale a regra automatica (folga do pai = Anne com o papai).

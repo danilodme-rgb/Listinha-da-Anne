@@ -192,7 +192,7 @@ function TecladoPin({ esperado, aoAcertar }: { esperado: string; aoAcertar: () =
         onChange={(e) => setValor(e.target.value.replace(/\D/g, '').slice(0, 4))}
         aria-label="PIN de 4 números"
       />
-      {errou && <div className="alerta-leitura" style={{ marginTop: 10 }}>PIN errado, tenta de novo.</div>}
+      {errou && <div className="alerta-leitura" style={{ marginTop: 10 }}>PIN errado, tente de novo.</div>}
     </>
   )
 }

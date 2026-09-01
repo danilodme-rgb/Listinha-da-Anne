@@ -1,9 +1,14 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import type { Estado, Perfil, StatusDia } from '../lib/types'
 import { MESES, chaveDe, curta, diasNoMes, hoje, porExtenso, somaDias } from '../lib/dates'
 import { lerEscala } from '../lib/parser'
 import { emCasaNoMes, emCasaPorMes, emCasaTotal } from '../lib/relatorio'
-import { alternarComPapai, aplicarLeitura, comPapai, definirDia, limparMes } from '../lib/store'
+import {
+  aplicarLeitura, comPapai, definirDia, definirDonoDoDia, definirObservacao,
+  donoEscolhidoAMao, limparMes, observacaoDe,
+} from '../lib/store'
+import { linhasDoRelatorio } from '../lib/relatorio'
+import { compartilharPdf, montarPdf } from '../lib/pdf'
 import { Calendario } from '../components/Calendario'
 import { Modal } from '../components/Modal'
 
@@ -30,14 +35,16 @@ export function EscalaView({ estado, perfil, ano, mes, aoMudarMes }: Props) {
     let voando = 0
     let folga = 0
     let comPai = 0
+    let comMae = 0
     for (let d = 1; d <= diasNoMes(ano, mes); d++) {
       const k = chaveDe(ano, mes, d)
       const s = estado.escala[k]?.status
       if (s === 'trabalho') voando++
       if (s === 'folga') folga++
       if (comPapai(estado, k)) comPai++
+      else comMae++
     }
-    return { voando, folga, comPai }
+    return { voando, folga, comPai, comMae }
   }, [estado, ano, mes])
 
   const emCasa = useMemo(() => ({
@@ -86,48 +93,21 @@ export function EscalaView({ estado, perfil, ano, mes, aoMudarMes }: Props) {
       )}
 
       {selecionado && (
-        <div className="cartao">
-          <h2>{porExtenso(selecionado)}</h2>
-          <p className="ajuda" style={{ marginBottom: 10 }}>
-            {estado.escala[selecionado]?.status === 'trabalho' && '✈️ O papai está trabalhando.'}
-            {estado.escala[selecionado]?.status === 'folga' && '🏠 O papai está de folga.'}
-            {!estado.escala[selecionado] && 'Ainda sem escala para esse dia.'}
-            {estado.escala[selecionado]?.nota && ` (${estado.escala[selecionado]!.nota})`}
-            {comPapai(estado, selecionado) && ' A Anne passa o dia com ele.'}
-          </p>
-
-          {podeEditar && (
-            <div className="pilha">
-              <div className="linha" style={{ gap: 6 }}>
-                {(['trabalho', 'folga'] as StatusDia[]).map((s) => (
-                  <button
-                    key={s}
-                    className={`btn pequeno${estado.escala[selecionado]?.status === s ? ' primario' : ''}`}
-                    style={{ flex: 1 }}
-                    onClick={() => definirDia(selecionado, estado.escala[selecionado]?.status === s ? null : s)}
-                  >
-                    {s === 'trabalho' ? '✈️ Trabalho' : '🏠 Folga'}
-                  </button>
-                ))}
-                <button className="btn pequeno contorno" onClick={() => definirDia(selecionado, null)}>Limpar</button>
-              </div>
-              <button
-                className={`btn pequeno${comPapai(estado, selecionado) ? ' primario' : ' contorno'}`}
-                onClick={() => alternarComPapai(selecionado)}
-              >
-                👨 Anne {comPapai(estado, selecionado) ? 'está' : 'não está'} com o papai nesse dia
-              </button>
-            </div>
-          )}
-        </div>
+        <DiaSelecionado
+          estado={estado}
+          data={selecionado}
+          podeEditar={podeEditar}
+        />
       )}
 
       <div className="cartao">
         <h3>{MESES[mes]} em números</h3>
-        <div className="cofre" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
-          <div><div className="rot">Voando</div><div className="num" style={{ color: 'var(--voo)' }}>{resumo.voando}</div></div>
-          <div><div className="rot">Folga</div><div className="num" style={{ color: 'var(--folga)' }}>{resumo.folga}</div></div>
-          <div><div className="rot">Com o papai</div><div className="num" style={{ color: 'var(--papai)' }}>{resumo.comPai}</div></div>
+        {/* 2x2: quatro colunas nao cabem em tela de celular */}
+        <div className="cofre">
+          <div><div className="rot">✈️ Voando</div><div className="num" style={{ color: 'var(--voo)' }}>{resumo.voando}</div></div>
+          <div><div className="rot">🏠 Folga</div><div className="num" style={{ color: 'var(--folga)' }}>{resumo.folga}</div></div>
+          <div><div className="rot">👨 Papai</div><div className="num" style={{ color: 'var(--papai)' }}>{resumo.comPai}</div></div>
+          <div><div className="rot">🐱 Mamãe</div><div className="num" style={{ color: 'var(--roxo)' }}>{resumo.comMae}</div></div>
         </div>
       </div>
 
@@ -161,6 +141,8 @@ export function EscalaView({ estado, perfil, ano, mes, aoMudarMes }: Props) {
               </div>
             </>
           )}
+
+          <BotaoRelatorio estado={estado} ano={ano} mes={mes} />
 
           {emCasa.porMes.length > 1 && (
             <div style={{ marginTop: 16 }}>
@@ -197,7 +179,7 @@ export function EscalaView({ estado, perfil, ano, mes, aoMudarMes }: Props) {
             Copie a mensagem que ele mandar e cole aqui: o app preenche o mês sozinho.
             Serve tanto para um recadinho (“01 folga, 02 voo”) quanto para a tabela
             <b> Minha Escala</b> copiada do sistema dele.
-            Os dias que não der para entender ficam em branco e aparecem na lista de avisos.
+            Os dias que o app não entender ficam em branco e aparecem na lista de avisos.
           </p>
           <div className="linha" style={{ gap: 8 }}>
             <button className="btn primario" style={{ flex: 1 }} onClick={() => setColando(true)}>
@@ -222,6 +204,138 @@ export function EscalaView({ estado, perfil, ano, mes, aoMudarMes }: Props) {
         />
       )}
     </>
+  )
+}
+
+
+/**
+ * Cartao do dia clicado: o que acontece nele, a observacao da mamae e com quem
+ * a Anne fica. As duas opcoes ficam lado a lado de proposito -- o botao antigo
+ * dizia "a Anne nao esta com o papai" e alterava no mesmo toque, o que fazia um
+ * dia de folga aparecer errado depois de um toque curioso.
+ */
+function DiaSelecionado({ estado, data, podeEditar }: { estado: Estado; data: string; podeEditar: boolean }) {
+  const dia = estado.escala[data]
+  const papai = comPapai(estado, data)
+  const obs = observacaoDe(estado, data)
+  const aMao = donoEscolhidoAMao(estado, data)
+  const campo = useRef<HTMLTextAreaElement>(null)
+
+  return (
+    <div className="cartao">
+      <h2>{porExtenso(data)}</h2>
+      <p className="ajuda" style={{ marginBottom: 10 }}>
+        {dia?.status === 'trabalho' && '✈️ O papai está trabalhando.'}
+        {dia?.status === 'folga' && '🏠 O papai está de folga.'}
+        {!dia && 'Ainda não há escala para este dia.'}
+        {dia?.nota && ` (${dia.nota})`}
+        {papai
+          ? ' 👨 É dia do papai: a Anne passa o dia com ele.'
+          : ' 🐱 É dia da mamãe: a Anne fica em casa com a mamãe.'}
+      </p>
+
+      {obs && !podeEditar && <div className="obs-dia">📝 {obs}</div>}
+
+      {podeEditar && (
+        <div className="pilha">
+          <div>
+            <label className="rotulo" htmlFor="obs-dia">📝 Observações deste dia</label>
+            <textarea
+              id="obs-dia"
+              key={data}
+              ref={campo}
+              className="campo"
+              style={{ minHeight: 64, marginTop: 6 }}
+              defaultValue={obs}
+              placeholder="Ex.: o papai chega às 13h e vai embora às 20h"
+              onBlur={(ev) => definirObservacao(data, ev.target.value)}
+            />
+            <button
+              className="btn pequeno"
+              style={{ marginTop: 6 }}
+              onClick={() => definirObservacao(data, campo.current?.value ?? '')}
+            >
+              Salvar observação
+            </button>
+          </div>
+
+          <div>
+            <div className="rotulo" style={{ marginBottom: 6 }}>A escala do papai neste dia</div>
+            <div className="linha" style={{ gap: 6 }}>
+              {(['trabalho', 'folga'] as StatusDia[]).map((op) => (
+                <button
+                  key={op}
+                  className={`btn pequeno${dia?.status === op ? ' primario' : ''}`}
+                  style={{ flex: 1 }}
+                  aria-pressed={dia?.status === op}
+                  onClick={() => definirDia(data, dia?.status === op ? null : op)}
+                >
+                  {op === 'trabalho' ? '✈️ Trabalho' : '🏠 Folga'}
+                </button>
+              ))}
+              <button className="btn pequeno contorno" onClick={() => definirDia(data, null)}>Limpar</button>
+            </div>
+          </div>
+
+          <div>
+            <div className="rotulo" style={{ marginBottom: 6 }}>Com quem a Anne fica</div>
+            <div className="linha" style={{ gap: 6 }}>
+              <button
+                className={`btn pequeno${papai ? ' primario' : ' contorno'}`}
+                style={{ flex: 1 }}
+                aria-pressed={papai}
+                onClick={() => definirDonoDoDia(data, 'papai')}
+              >
+                👨 Dia do papai
+              </button>
+              <button
+                className={`btn pequeno${papai ? ' contorno' : ' primario'}`}
+                style={{ flex: 1 }}
+                aria-pressed={!papai}
+                onClick={() => definirDonoDoDia(data, 'mamae')}
+              >
+                🐱 Dia da mamãe
+              </button>
+            </div>
+            {aMao && (
+              <button
+                className="btn pequeno contorno"
+                style={{ marginTop: 6, width: '100%' }}
+                onClick={() => definirDonoDoDia(data, null)}
+              >
+                Voltar ao automático (folga do papai = dia do papai)
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/** Gera o relatorio de frequencia em PDF e manda para o WhatsApp (ou baixa). */
+function BotaoRelatorio({ estado, ano, mes }: { estado: Estado; ano: number; mes: number }) {
+  const [ocupado, setOcupado] = useState(false)
+
+  const gerar = async () => {
+    setOcupado(true)
+    try {
+      const linhas = linhasDoRelatorio(estado, ano, mes, curta(hoje()))
+      const bytes = montarPdf(`Escala do Alexandre — ${MESES[mes]} de ${ano}`, linhas)
+      const nome = `escala-${ano}-${String(mes + 1).padStart(2, '0')}.pdf`
+      const fim = await compartilharPdf(nome, bytes)
+      if (fim === 'baixado') alert(`Relatório salvo como ${nome}. É só anexar no WhatsApp. 💜`)
+    } catch {
+      alert('Não consegui gerar o relatório agora. Tente de novo.')
+    } finally {
+      setOcupado(false)
+    }
+  }
+
+  return (
+    <button className="btn grande" style={{ marginTop: 14 }} disabled={ocupado} onClick={() => void gerar()}>
+      {ocupado ? 'Gerando…' : '📄 Relatório em PDF para o WhatsApp'}
+    </button>
   )
 }
 
@@ -289,7 +403,7 @@ function ColarEscala({
                 {!leitura.mesDetectado && ' (mês assumido pelo calendário aberto)'}.
               </>
             ) : (
-              <>Não consegui reconhecer nenhum dia nesse texto.</>
+              <>Não consegui reconhecer nenhum dia neste texto.</>
             )}
 
             {leitura.naoReconhecidos.length > 0 && (

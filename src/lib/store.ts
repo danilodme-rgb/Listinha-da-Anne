@@ -10,7 +10,7 @@ import {
 
 const CHAVE_LS = 'listinha-da-anne/estado'
 const CHAVE_SINC = 'listinha-da-anne/sincronizado-em'
-const VERSAO = 2
+const VERSAO = 3
 
 /**
  * O banho deixa tudo espalhado, entao ele vem com perguntinhas: a Anne so' marca
@@ -50,6 +50,7 @@ export function estadoNovo(): Estado {
     versao: VERSAO,
     atualizadoEm: Date.now(),
     escala: {},
+    observacoes: {},
     comPapai: {},
     comPapaiAutomatico: true,
     afazeres: AFAZERES_PADRAO,
@@ -76,7 +77,11 @@ function migrar(bruto: unknown): Estado {
     ...base,
     ...e,
     escala: e.escala ?? {},
+    observacoes: e.observacoes ?? {},
     comPapai: e.comPapai ?? {},
+    // aparelho com versao antiga nao manda o campo: sem isso, folga deixava
+    // de virar dia do papai sozinha
+    comPapaiAutomatico: e.comPapaiAutomatico ?? true,
     afazeres,
     listas: e.listas ?? {},
     pagamentos: e.pagamentos ?? [],
@@ -263,13 +268,42 @@ export function comPapai(e: Estado, data: string): boolean {
   return e.comPapaiAutomatico && e.escala[data]?.status === 'folga'
 }
 
-export function alternarComPapai(data: string): void {
+/**
+ * Escolha explicita da Kelly: 'papai', 'mamae' ou null para voltar ao
+ * automatico (folga do Alexandre = dia do papai).
+ *
+ * O botao antigo alternava e ao mesmo tempo descrevia o estado -- um toque
+ * curioso virava "a Anne nao esta com o papai" num dia de folga, sem caminho
+ * de volta. Agora sao duas opcoes lado a lado, e da' para voltar ao automatico.
+ */
+export function definirDonoDoDia(data: string, dono: 'papai' | 'mamae' | null): void {
   alterar((e) => {
+    if (dono === null) { delete e.comPapai[data]; return }
     const automatico = e.comPapaiAutomatico && e.escala[data]?.status === 'folga'
-    const novo = !(e.comPapai[data] ?? automatico)
-    // volta ao automatico quando o valor manual coincide com a regra
-    if (novo === automatico) delete e.comPapai[data]
-    else e.comPapai[data] = novo
+    const querPapai = dono === 'papai'
+    if (querPapai === automatico) delete e.comPapai[data]
+    else e.comPapai[data] = querPapai
+  })
+}
+
+/** A escolha veio da Kelly (true) ou do automatico da escala (false)? */
+export function donoEscolhidoAMao(e: Estado, data: string): boolean {
+  return e.comPapai[data] !== undefined
+}
+
+// ---------------------------------------------------------------- observacoes do dia
+
+/** Observacao da Kelly no dia. Fica fora de `escala` de proposito: colar a
+ *  escala de novo reescreve `escala`, e o recado dela nao pode sumir junto. */
+export function observacaoDe(e: Estado, data: string): string {
+  return e.observacoes[data] ?? ''
+}
+
+export function definirObservacao(data: string, texto: string): void {
+  alterar((e) => {
+    const limpo = texto.trim()
+    if (limpo) e.observacoes[data] = limpo
+    else delete e.observacoes[data]
   })
 }
 
@@ -335,8 +369,8 @@ export function enviarLista(data: string): void {
     lista.vistaEm = undefined
     e.avisos.unshift({
       id: novoId('av'), para: 'anne', em: Date.now(),
-      titulo: 'A mamãe montou uma listinha pra você! 💌',
-      texto: lista.recado ? `Tem recado: “${lista.recado}”` : 'Corre ver o que tem pra hoje!',
+      titulo: 'A mamãe montou uma listinha para você! 💌',
+      texto: lista.recado ? `Tem recado: “${lista.recado}”` : 'Corra ver o que tem para hoje!',
       lido: false,
     })
   })
@@ -436,7 +470,7 @@ export function conferirTarefa(data: string, id: string): void {
     t.conferidaEm = Date.now()
     e.avisos.unshift({
       id: novoId('av'), para: 'anne', em: Date.now(),
-      titulo: 'Mamãe conferiu! 🎉',
+      titulo: 'A mamãe conferiu! 🎉',
       texto: `${t.emoji} ${t.titulo} — o dinheiro já está no seu cofrinho.`,
       lido: false,
     })
@@ -454,7 +488,7 @@ export function conferirTudo(data: string): number {
     if (n > 0) {
       e.avisos.unshift({
         id: novoId('av'), para: 'anne', em: Date.now(),
-        titulo: 'Mamãe conferiu tudo! 🎉',
+        titulo: 'A mamãe conferiu tudo! 🎉',
         texto: `${n} ${n === 1 ? 'tarefa conferida' : 'tarefas conferidas'} — dinheiro no cofrinho!`,
         lido: false,
       })
@@ -511,7 +545,7 @@ export function avisarPapaiNaCidade(): void {
     e.avisos.unshift({
       id: idAvisoPapai(data, 'anne'), para: 'anne', em: Date.now(),
       titulo: 'O papai está na cidade hoje! 👨‍✈️',
-      texto: 'É dia de folga dele. Aproveita bastante! 💜',
+      texto: 'É dia de folga dele. Aproveite bastante! 💜',
       lido: false,
     })
     e.avisos.unshift({

@@ -1,6 +1,6 @@
 import type { Estado } from '../lib/types'
 import { DIAS_SEMANA, MESES, ehHoje, gradeDoMes, paraData } from '../lib/dates'
-import { comPapai, listaDe } from '../lib/store'
+import { comPapai, listaDe, observacaoDe } from '../lib/store'
 
 interface Props {
   estado: Estado
@@ -39,6 +39,7 @@ export function Calendario({
           const dia = paraData(data).getDate()
           const status = estado.escala[data]?.status
           const papai = comPapai(estado, data)
+          const obs = observacaoDe(estado, data)
           const lista = mostrarListas ? listaDe(estado, data) : null
           const temTarefas = (lista?.tarefas.length ?? 0) > 0
           const tudoFeito = temTarefas && lista!.tarefas.every((t) => t.feita)
@@ -52,7 +53,8 @@ export function Calendario({
           const descricao = [
             `Dia ${dia}`,
             status === 'trabalho' ? 'papai voando' : status === 'folga' ? 'papai de folga' : 'sem escala',
-            papai ? 'Anne com o papai' : '',
+            papai ? 'dia do papai' : 'dia da mamãe',
+            obs ? `observação: ${obs}` : '',
             temTarefas ? `${lista!.tarefas.length} tarefas` : '',
           ].filter(Boolean).join(', ')
 
@@ -68,11 +70,12 @@ export function Calendario({
               <span>{dia}</span>
               <span className="marca">
                 {status === 'trabalho' ? '✈️' : status === 'folga' ? '🏠' : '·'}
-                {papai ? '👨' : ''}
+                {papai ? '👨' : '🐱'}
               </span>
-              {temTarefas && (
+              {(temTarefas || obs) && (
                 <span className="pontos">
-                  <span className={`ponto${tudoFeito ? ' feito' : ''}`} />
+                  {obs && <span className="ponto obs" />}
+                  {temTarefas && <span className={`ponto${tudoFeito ? ' feito' : ''}`} />}
                 </span>
               )}
             </button>
@@ -85,7 +88,9 @@ export function Calendario({
           <span><i style={{ background: 'var(--voo-bg)' }} />✈️ Papai trabalhando</span>
           <span><i style={{ background: 'var(--folga-bg)' }} />🏠 Papai de folga</span>
           <span><i style={{ background: '#f4f2fa' }} />Sem escala</span>
-          <span>👨 Anne com o papai</span>
+          <span>👨 Dia do papai</span>
+          <span>🐱 Dia da mamãe</span>
+          <span><i className="ponto obs" style={{ borderRadius: 999 }} />Tem observação</span>
         </div>
       )}
     </div>

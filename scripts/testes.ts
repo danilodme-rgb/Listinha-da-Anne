@@ -3,6 +3,8 @@ import { aceitaDaNuvem } from '../src/lib/sincronia'
 import { deveAvisarPapai, idAvisoPapai, passosFaltando, podeConcluir } from '../src/lib/regras'
 import { emCasaNoMes, emCasaPorMes, emCasaTotal } from '../src/lib/relatorio'
 import { deveRecarregar, podeProcurar } from '../src/lib/atualizacao'
+import { escaparPdf, montarPdf, paraWinAnsi, quebrarTexto } from '../src/lib/pdf'
+import { linhasDoRelatorio } from '../src/lib/relatorio'
 import type { Estado, TarefaDoDia } from '../src/lib/types'
 
 let falhas = 0
@@ -228,6 +230,74 @@ eq('atualizacao: nao recarrega duas vezes',
 
 eq('atualizacao: procura de novo depois de um minuto',
   [podeProcurar(60_000, 0), podeProcurar(59_999, 0)], [true, false])
+
+
+// ---------------------------------------------------------------- relatorio em PDF
+
+eq('pdf: emoji e travessao viram texto que a Helvetica tem',
+  paraWinAnsi('🏠 Folga — “dia do papai”'),
+  'Folga - "dia do papai"')
+
+eq('pdf: acento continua valendo', paraWinAnsi('observação às 13h'), 'observação às 13h')
+
+eq('pdf: parenteses e barra escapados',
+  escaparPdf('folga (13h) \\ trabalho'),
+  'folga \\(13h\\) \\\\ trabalho')
+
+// 100pt de largura com corpo 11 dao ~18 caracteres por linha
+eq('pdf: quebra por largura',
+  quebrarTexto('um dois tres quatro cinco seis', 11, 100),
+  ['um dois tres', 'quatro cinco seis'])
+
+eq('pdf: palavra maior que a linha e cortada',
+  quebrarTexto('a'.repeat(24), 11, 100),
+  ['a'.repeat(18), 'a'.repeat(6)])
+
+const bytesPdf = montarPdf('Teste', [{ texto: 'Olá (mundo)', tamanho: 12 }])
+const textoPdf = Array.from(bytesPdf, (b) => String.fromCharCode(b)).join('')
+eq('pdf: comeca com o cabecalho do formato', textoPdf.slice(0, 8), '%PDF-1.4')
+eq('pdf: termina fechando o arquivo', textoPdf.trim().endsWith('%%EOF'), true)
+{
+  const inicio = Number(textoPdf.match(/startxref\n(\d+)/)![1])
+  eq('pdf: startxref aponta mesmo para a tabela xref', textoPdf.slice(inicio, inicio + 4), 'xref')
+}
+{
+  // O leitor segue /Kids para achar as paginas. Apontar para o objeto errado
+  // (foi o que aconteceu: as paginas comecam no 6, nao no 5) abre um PDF vazio.
+  const kids = textoPdf.match(/\/Kids \[([^\]]+)\]/)![1].trim().split(/\s+0 R\s*/).filter(Boolean)
+  const tipoDoObjeto = (id: string) => {
+    const corpo = textoPdf.slice(textoPdf.indexOf(`\n${id} 0 obj\n`))
+    return corpo.slice(0, corpo.indexOf('endobj')).includes('/Type /Page') ? 'pagina' : 'outra coisa'
+  }
+  eq('pdf: cada /Kids aponta mesmo para uma pagina', kids.map(tipoDoObjeto), ['pagina'])
+}
+
+const estadoRelatorio = {
+  escala: {
+    '2026-09-01': { status: 'folga' as const },
+    '2026-09-02': { status: 'trabalho' as const },
+    '2026-09-03': { status: 'folga' as const },
+  },
+  observacoes: { '2026-09-01': 'chega 13h, sai 20h' },
+  comPapai: { '2026-09-03': false },
+  comPapaiAutomatico: true,
+}
+
+{
+  const texto = linhasDoRelatorio(estadoRelatorio, 2026, 8, '01/09').map((l) => l.texto)
+  eq('relatorio: folga do dia 1 e dia do papai, com a observacao junto',
+    texto.some((t) => t.startsWith('01/09') && t.includes('dia do papai') && t.includes('chega 13h, sai 20h')),
+    true)
+  eq('relatorio: folga que a Kelly desmarcou vira dia da mamae',
+    texto.some((t) => t.startsWith('03/09') && t.includes('dia da mamãe')),
+    true)
+  eq('relatorio: dia de trabalho tambem e dia da mamae',
+    texto.some((t) => t.startsWith('02/09') && t.includes('dia da mamãe')),
+    true)
+  eq('relatorio: resumo do mes conta os dias lidos',
+    texto.some((t) => t === '2 dias de folga · 1 dia de trabalho'),
+    true)
+}
 
 console.log(falhas === 0 ? '\nTodos os testes passaram.' : `\n${falhas} teste(s) falharam.`)
 process.exit(falhas === 0 ? 0 : 1)

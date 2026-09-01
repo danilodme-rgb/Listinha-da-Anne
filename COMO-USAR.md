@@ -259,6 +259,36 @@ o relatório de quanto tempo o Alexandre passou em casa, em porcentagem:
 nem a favor nem contra — senão um mês preenchido pela metade pareceria um mês em que ele sumiu.
 Por isso vale a pena colar a escala de todo mês: o histórico vai ficando mais fiel.
 
+### Dia do papai e dia da mamãe 🐱
+
+No calendário, cada dia mostra duas coisas: o que o **papai** faz (✈️ voando, 🏠 de folga) e
+com quem a **Anne** fica naquele dia — 👨 dia do papai ou 🐱 dia da mamãe.
+
+Folga do Alexandre já entra como **dia do papai** sozinha. Quando não for assim, é só clicar no
+dia e escolher **🐱 Dia da mamãe** — e o botão *Voltar ao automático* desfaz a escolha à mão.
+
+### Observações do dia 📝
+
+Clique em qualquer dia do calendário e escreva no campo **Observações deste dia** — por exemplo,
+*"o papai chega às 13h e vai embora às 20h"*. O dia passa a ter uma **bolinha roxa** no
+calendário, e o texto aparece assim que alguém clica nele. A Anne também vê a observação no app
+dela, sem poder mudar.
+
+A observação fica guardada separada da escala: colar a escala de novo **não apaga** o que a
+Kelly escreveu.
+
+### Relatório em PDF para mandar no WhatsApp 📄
+
+No fim do quadro **🏠 Papai em casa** tem o botão **Relatório em PDF para o WhatsApp**. Ele gera
+um arquivo com:
+
+- o resumo do mês aberto (dias de folga, dias de trabalho e a porcentagem);
+- o **dia a dia** do mês, dizendo se foi dia do papai ou da mamãe e a observação de cada dia;
+- o **mês a mês** e o total de tudo que já foi lido.
+
+No celular, o app abre a janela de compartilhar e o **WhatsApp aparece na lista** — é escolher a
+conversa e pronto. No computador, o arquivo é baixado para você anexar à mão.
+
 ### Montar a listinha (aba Mamãe)
 
 1. Escolha o dia no calendário (a bolinha rosa marca os dias que já têm lista).

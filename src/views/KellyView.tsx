@@ -38,7 +38,7 @@ export function KellyView({ estado, ano, mes, aoMudarMes, dia, aoMudarDia }: Pro
       {pendentes.length > 0 && (
         <div className="cartao" style={{ borderTop: '4px solid var(--ok)' }}>
           <h2>🔔 Para conferir ({pendentes.length})</h2>
-          <p className="ajuda">A Anne marcou como feito. Confira e o valor entra no cofrinho dela.</p>
+          <p className="ajuda">A Anne marcou como feitas. Confira e o valor entra no cofrinho dela.</p>
           <div className="pilha">
             {pendentes.slice(0, 8).map(({ data, tarefa }) => (
               <div className="tarefa" key={tarefa.id}>
@@ -183,7 +183,7 @@ export function KellyView({ estado, ano, mes, aoMudarMes, dia, aoMudarDia }: Pro
         <h3 style={{ marginTop: 16 }}>Recado da mamãe</h3>
         <textarea
           className="campo"
-          placeholder="Escreva um carinho pra Anne ler quando abrir a listinha…"
+          placeholder="Escreva um carinho para a Anne ler quando abrir a listinha…"
           value={lista.recado}
           onChange={(e) => definirRecado(dia, e.target.value)}
         />
@@ -246,7 +246,7 @@ export function KellyView({ estado, ano, mes, aoMudarMes, dia, aoMudarDia }: Pro
           )}
         </div>
         {avisos.length === 0 ? (
-          <div className="vazio-msg">Nada por aqui ainda. Quando a Anne concluir uma tarefa, aparece aqui. 💜</div>
+          <div className="vazio-msg">Nada por aqui ainda. Quando a Anne concluir uma tarefa, o aviso aparece aqui. 💜</div>
         ) : (
           <div className="pilha">
             {avisos.slice(0, 12).map((a) => (
@@ -307,7 +307,7 @@ function EditorCatalogo({ estado, aoFechar }: { estado: Estado; aoFechar: () => 
 
   return (
     <Modal titulo="Afazeres que a Anne pode fazer" aoFechar={aoFechar}>
-      <p className="ajuda">Esse é o catálogo reutilizável. Mude os valores como preferir.</p>
+      <p className="ajuda">Este é o catálogo reutilizável. Mude os valores como preferir.</p>
       <div className="pilha">
         {estado.afazeres.map((a) => (
           <div key={a.id}>

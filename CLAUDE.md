@@ -15,7 +15,7 @@ de Stop cobra isso sozinho.
 
 <!-- inicio-geral -->
 
-> **Bloco geral copiado de `instrucoes@b0fa3ce`.** Não editar aqui: regra nova entra
+> **Bloco geral copiado de `instrucoes@48513cd`.** Não editar aqui: regra nova entra
 > primeiro em `danilodme-rgb/instrucoes` e volta para cá por cópia. Cópia diferente da
 > fonte, atualizo esta antes de trabalhar.
 
@@ -54,9 +54,20 @@ de Stop cobra isso sozinho.
     teste de função pura passa verde com a lógica errada. Rodar o ciclo inteiro antes de
     dizer que funciona. Caso real: uma função de "deve recarregar?" passou nos testes e o app
     não recarregava nada no navegador.
+11c. **Arquivo gerado só está pronto quando um leitor de terceiro abre.** PDF, CSV, ICS,
+    imagem: o meu próprio gerador dizendo "gerou" não prova nada. Caso real: um PDF passou
+    em todos os testes que eu mesmo escrevi e a primeira biblioteca de fora leu "0 páginas"
+    — um ponteiro interno apontava para o objeto errado.
 12. **Texto de produto é para quem vai usar, não para mim.** Frases curtas, zero jargão
     técnico, formatos locais (R$, datas em pt-BR). Quando o usuário for criança, mais curto
     ainda e emoji como pista visual.
+12c. **Texto de produto também se revisa.** Concordância ("a Anne marcou como feitas"),
+    plural ("1 dia", nunca "1 dias") e forma verbal consistente — se o app trata por *você*,
+    é "toque", não "toca". Erro de português no app é erro de produto, não detalhe.
+12d. **Botão não descreve e altera ao mesmo tempo.** Um botão escrito "a Anne não está com
+    o papai" parece uma afirmação do app; o toque curioso inverte o dado e não há caminho
+    de volta visível. Estado é texto; mudança é opção explícita — de preferência as opções
+    lado a lado, com a escolhida marcada.
 12b. **Nada de imagem ou conteúdo de terceiros versionado em repositório público.** Foto de
     pessoa real também não. Arte gerada em código ou desenhada; material pessoal fica no
     aparelho.
@@ -195,6 +206,26 @@ Para não redescobrir a cada sessão.
   verificar é o erro pior; e a cobrança de registro **só pode bloquear uma vez** — o segundo
   bloqueio seria laço infinito quando de fato não houve lição, por isso ela olha
   `stop_hook_active` na entrada do hook e na segunda parada só avisa.
+- **Observações do dia (`estado.observacoes`, editadas em EscalaView):** ficam **fora** de
+  `estado.escala` de propósito. `aplicarLeitura` reescreve `escala` inteira quando a Kelly cola
+  a escala de novo — se a observação morasse lá, o texto dela sumiria na próxima colagem. A
+  bolinha roxa no calendário marca o dia que tem observação, e o app da Anne mostra o texto
+  sem poder editar.
+- **Dia do papai / dia da mamãe:** todo dia que não é do papai é dia da mamãe (🐱 no
+  calendário). A regra automática continua sendo "folga do Alexandre = dia do papai";
+  `definirDonoDoDia(data, 'papai' | 'mamae' | null)` grava a escolha da Kelly e `null` volta ao
+  automático. O botão antigo descrevia e alterava ao mesmo tempo ("Anne não está com o papai"),
+  e um toque curioso fazia um dia de folga aparecer errado — por isso agora são duas opções
+  lado a lado. Na migração, `comPapaiAutomatico` ganhou `?? true`: aparelho com versão antiga
+  não manda o campo, e sem isso a folga deixaria de virar dia do papai sozinha.
+- **Relatório em PDF (`src/lib/pdf.ts`):** gerador escrito à mão, sem dependência — o app é
+  offline e não tem back-end. Helvetica com WinAnsi, então emoji é descartado antes de entrar
+  (`paraWinAnsi`), senão sai lixo. **Armadilha que custou uma rodada:** os objetos das páginas
+  começam no **6** (1 catálogo, 2 lista de páginas, 3 e 4 fontes, 5 info); apontar `/Kids` para
+  o 5 gera um arquivo que passa em todo teste caseiro e abre **vazio** — o pypdf lia "0
+  páginas". Há teste que segue o `/Kids` e confere que ele aponta para uma página de verdade.
+  `compartilharPdf` usa `navigator.share` com arquivo (o WhatsApp aparece na folha de
+  compartilhar do celular) e cai para download quando o navegador não suporta.
 - **Arquivos-chave:** `src/lib/parser.ts` (leitor da escala), `src/lib/store.ts` (estado e
   ações), `src/views/` (uma tela por aba).
 - **Documentação para o usuário:** `COMO-USAR.md` — atualizar quando algo mudar para ele.
