@@ -77,8 +77,8 @@ export function AnneView({ estado, ano, mes, aoMudarMes, dia, aoMudarDia }: Prop
       {temNovidade && (
         <div className="convite">
           <div className="env">💌</div>
-          <h2>A mamãe montou uma listinha pra você!</h2>
-          <p>Toca no botão pra ver o que tem hoje.</p>
+          <h2>A mamãe montou uma listinha para você!</h2>
+          <p>Toque no botão para ver o que tem hoje.</p>
           <button onClick={abrirListinha}>Abrir a listinha ✨</button>
         </div>
       )}
@@ -113,7 +113,7 @@ export function AnneView({ estado, ano, mes, aoMudarMes, dia, aoMudarDia }: Prop
             {lista.tarefas.length === 0 && !foraDeCasa && (
               <div className="vazio-msg">
                 <div style={{ fontSize: 40 }}>🌤️</div>
-                Ainda não tem listinha para esse dia.<br />Depois volta aqui pra ver!
+                Ainda não há listinha para este dia.<br />Depois volte aqui para ver!
               </div>
             )}
 
@@ -135,7 +135,7 @@ export function AnneView({ estado, ano, mes, aoMudarMes, dia, aoMudarDia }: Prop
                         <div className="titulo">{t.titulo}</div>
                         {t.feita && (
                           <div className="obs">
-                            {t.conferida ? '✓ a mamãe conferiu!' : 'feito! esperando a mamãe conferir'}
+                            {t.conferida ? '✓ A mamãe conferiu!' : 'Feito! Esperando a mamãe conferir.'}
                           </div>
                         )}
                         {!t.feita && !!t.passos?.length && (
@@ -181,7 +181,7 @@ export function AnneView({ estado, ano, mes, aoMudarMes, dia, aoMudarDia }: Prop
             </button>
             <p className="ajuda" style={{ margin: '8px 0 0' }}>
               {c.saldo > 0
-                ? 'Aperte só depois que a mamãe te entregar o dinheiro. O cofrinho volta pro zero e ela recebe o aviso.'
+                ? 'Aperte só depois que a mamãe te entregar o dinheiro. O cofrinho volta para zero e ela recebe o aviso.'
                 : 'Seu cofrinho está zerado. Faça as tarefinhas para encher de novo! ⭐'}
             </p>
             {c.pago > 0 && (
@@ -227,7 +227,7 @@ export function AnneView({ estado, ano, mes, aoMudarMes, dia, aoMudarDia }: Prop
               titulo={`${tarefaPerguntando.emoji} ${tarefaPerguntando.titulo}`}
               aoFechar={() => setPerguntando(null)}
             >
-              <p className="ajuda">Antes de marcar, responde pra mim:</p>
+              <p className="ajuda">Antes de marcar, responda para mim:</p>
               <div className="pilha">
                 {(tarefaPerguntando.passos ?? []).map((p, i) => (
                   <button

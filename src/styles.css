@@ -394,3 +394,18 @@ html, body { overscroll-behavior-y: contain; }
   white-space: nowrap;
   z-index: 70;
 }
+
+/* bolinha roxa: o dia tem observação da mamãe (vale no calendário e na legenda) */
+.ponto.obs { background: var(--roxo); }
+.legenda i.ponto.obs { width: 9px; height: 9px; }
+
+/* observação do dia, no cartão do dia selecionado */
+.obs-dia {
+  background: var(--roxo-claro);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 13.5px;
+  line-height: 1.45;
+  margin-bottom: 10px;
+  white-space: pre-wrap;
+}

@@ -100,7 +100,7 @@ export function AjustesView({ estado }: { estado: Estado }) {
                 : config && { ...config, familia: familia.trim() || config.familia }
               if (!c) {
                 alert(config
-                  ? 'Não achei apiKey e databaseURL nesse texto.'
+                  ? 'Não achei apiKey e databaseURL neste texto.'
                   : 'Cole a configuração do Firebase primeiro.')
                 return
               }
