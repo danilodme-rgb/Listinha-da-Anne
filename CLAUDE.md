@@ -1,6 +1,23 @@
 # Diretrizes de trabalho — Listinha da Anne
 
-Combinado com o Danilo. Valem para toda sessão neste repositório.
+Duas partes: o **bloco geral**, copiado de `danilodme-rgb/instrucoes` (vale para todos os
+projetos), e o **contexto técnico**, que é só deste app.
+
+**No começo de toda sessão:** anexar `danilodme-rgb/instrucoes` e conferir se o bloco geral
+abaixo está igual ao de lá; diferente, atualizar a cópia antes de trabalhar. Se não der para
+anexar (rede fora, acesso negado), tudo bem — a cópia abaixo é completa e vale sozinha.
+
+**Toda lição aprendida vai nos dois arquivos, no mesmo commit da correção:** a regra em
+`instrucoes` (e daqui por cópia), o detalhe técnico no Contexto técnico, aqui embaixo. O hook
+de Stop cobra isso sozinho.
+
+---
+
+<!-- inicio-geral -->
+
+> **Bloco geral copiado de `instrucoes@b0fa3ce`.** Não editar aqui: regra nova entra
+> primeiro em `danilodme-rgb/instrucoes` e volta para cá por cópia. Cópia diferente da
+> fonte, atualizo esta antes de trabalhar.
 
 ## 1. Como responder
 
@@ -17,10 +34,10 @@ Combinado com o Danilo. Valem para toda sessão neste repositório.
 
 5. **Separar o que eu verifiquei do que eu suponho.** Se não rodei/não olhei, dizer "não
    verifiquei" — não apresentar como fato.
-6. **Ser explícito sobre o que eu não consigo enxergar**: configurações do GitHub (Settings,
-   Pages, Environments), o celular dele, a conta do Firebase. Quando algo depender disso, dizer
-   "não consigo ver X, o que eu vejo é Y" — em vez de inferir e apresentar como certeza.
-7. **Antes de afirmar que funciona, rodar.** Teste, build ou o app no navegador. "Deve
+6. **Ser explícito sobre o que eu não consigo enxergar**: configurações de contas e serviços,
+   o celular dele, painéis de terceiros. Quando algo depender disso, dizer "não consigo ver X,
+   o que eu vejo é Y" — em vez de inferir e apresentar como certeza.
+7. **Antes de afirmar que funciona, rodar.** Teste, build, ou o programa de verdade. "Deve
    funcionar" não é entrega.
 8. **Errei → correção curta e explícita, com o impacto prático.** Sem rodeios e sem
    autoflagelo. Uma vez, e segue.
@@ -29,24 +46,40 @@ Combinado com o Danilo. Valem para toda sessão neste repositório.
 
 9. Entregar a tarefa inteira. Se alguma parte ficou de fora, dizer **qual e por quê** — reduzir
    escopo é decisão dele, não minha.
-10. **`npm test` e `npm run build` verdes antes de qualquer push.** Sem exceção.
-11. **Mudança visual → rodar no navegador e mandar print.** Screenshot vale mais que descrição.
-12. Textos do app são para a Anne (8 anos) e para a Kelly: frases curtas, emoji como pista
-    visual, zero jargão técnico. Valores em R$ formatados em pt-BR.
-12b. **Nada de imagem de terceiros versionada.** O repositório é público; foto de artista ou
-    de pessoa real não entra nele. Arte do app é desenhada (ver `scripts/gen_icons.py`), e
-    foto pessoal fica no aparelho, via `src/lib/fotos.ts`.
+10. **Testes e build do projeto verdes antes de qualquer push.** Sem exceção. Se o projeto
+    ainda não tem esses comandos, dizer isso em vez de pular a verificação.
+11. **Mudança visual → rodar e mandar print.** Screenshot vale mais que descrição.
+11b. **Comportamento de ambiente se prova no ciclo real, não no teste unitário.** Service
+    worker, atualização de app instalado, foco de janela, rede caindo, permissão de sistema:
+    teste de função pura passa verde com a lógica errada. Rodar o ciclo inteiro antes de
+    dizer que funciona. Caso real: uma função de "deve recarregar?" passou nos testes e o app
+    não recarregava nada no navegador.
+12. **Texto de produto é para quem vai usar, não para mim.** Frases curtas, zero jargão
+    técnico, formatos locais (R$, datas em pt-BR). Quando o usuário for criança, mais curto
+    ainda e emoji como pista visual.
+12b. **Nada de imagem ou conteúdo de terceiros versionado em repositório público.** Foto de
+    pessoa real também não. Arte gerada em código ou desenhada; material pessoal fica no
+    aparelho.
 
 ## 4. Evitar retrabalho
 
 13. **Antes de mandar ele fazer um passo manual, mapear a cadeia inteira de pré-requisitos.**
-    Exemplo real: o environment `github-pages` só aceita deploy do branch padrão — então trocar
-    o default branch não era "arrumação", era bloqueio. Errei nisso uma vez; não repetir.
+    Caso real: um deploy travado porque a regra de branch de um ambiente apontava para o
+    branch padrão antigo — trocar o padrão não era "arrumação", era bloqueio.
 14. **Não classificar passo como "opcional" ou "só organização" sem ter certeza.** Na dúvida:
     "não sei se isso bloqueia — faça antes por segurança".
 15. **Falhou → ler o log/evidência antes de propor solução.** Nunca adivinhar causa. Se não há
-    log, usar o padrão da falha (duração, ausência de runner, etc.) e dizer que é inferência.
-16. Armadilha resolvida vira registro — aqui ou no `COMO-USAR.md` — para não custar duas vezes.
+    log, usar o padrão da falha (duração, ausência de execução, etc.) e dizer que é inferência.
+16. Armadilha resolvida vira registro — no projeto, ou aqui se for geral — para não custar
+    duas vezes.
+16b. **Todo descuido corrigido gera duas perguntas, não uma.** (a) Qual armadilha técnica
+    registrar? (b) Qual regra de processo teria evitado o descuido? A (b) é a que eu costumo
+    pular: num projeto real o contexto técnico quase dobrou em oito entregas enquanto as
+    regras de processo mudaram uma vez só. Se a (b) existir, entra nas seções 1 a 6 na mesma
+    entrega, não "depois" — e a (a) entra no `CLAUDE.md` do projeto. Uma lição nunca é
+    registrada só de um lado.
+16c. **O registro entra no mesmo commit da correção.** Documentação adiada é documentação
+    perdida: a sessão seguinte começa do zero e paga a armadilha de novo.
 
 ## 5. Economia de token
 
@@ -64,6 +97,8 @@ Combinado com o Danilo. Valem para toda sessão neste repositório.
 23. Ao sugerir, **entregar junto o resumo de transporte**: estado atual, decisões já tomadas e
     o que pedir na conversa nova. Ele não deve precisar reconstruir nada.
 24. É sugestão, não interrupção: se ele quiser seguir, seguimos.
+
+<!-- fim-geral -->
 
 ---
 
@@ -98,6 +133,22 @@ Para não redescobrir a cada sessão.
   `python3 scripts/gen_icons.py anne` reduz o arquivo para 192/512/maskable (leitor de PNG e
   redução por média de área estão no próprio script, sem dependência externa). Os ícones do
   endereço principal e da Kelly continuam desenhados em código, no mesmo arquivo.
+- **Atualização automática dos três apps (`src/lib/atualizacao.ts` + `scripts/sw.js`):** o
+  celular guarda o app instalado, então publicar no Pages não bastava — sem isso ele seguia
+  abrindo a versão antiga por dias. Três armadilhas já resolvidas, não desfazer:
+  1. **`sw.js` precisa mudar de bytes a cada build.** Ele mora em `scripts/sw.js` (fora de
+     `public/`) e o plugin `sw-carimbado` do `vite.config.ts` troca `__VERSAO__` pelo carimbo
+     do build (`GITHUB_SHA` no CI, data-hora local fora dele). Arquivo idêntico = navegador
+     nunca percebe versão nova.
+  2. **`controllerchange` também dispara na primeira instalação.** Recarregar ali seria susto
+     sem motivo; por isso só recarrega quando `updatefound` chegou com `registration.active`
+     já existindo (`deveRecarregar`, com teste em `scripts/testes.ts`).
+  3. **O Pages guarda o HTML por ~10 minutos.** Abertura de página é buscada com
+     `cache: 'reload'`: HTML velho aponta para `.js` que a publicação nova já apagou (tela
+     branca). O nome do cache é fixo de propósito — cache novo e vazio a cada versão deixaria
+     o app sem nada para mostrar se a internet caísse logo depois de atualizar.
+  Recarregar é seguro porque `alterar` (store.ts) grava no `localStorage` na hora. Ajustes
+  mostra o carimbo da versão e tem o botão "Procurar novidade" (só no app da Kelly).
 - **Perfis:** `kelly` (monta e confere) e `anne` (executa). PIN opcional protege o modo mamãe.
 - **O app da Anne não tem Ajustes, de propósito.** Ela liga a sincronização abrindo um link
   `.../anne/#sync=<config em base64>`, gerado em Ajustes no app da Kelly (`linkDeSincronizacao`
@@ -133,6 +184,17 @@ Para não redescobrir a cada sessão.
 - **Tarefa com perguntinhas:** `Afazer.passos` vira `TarefaDoDia.passos` no dia. A Anne só
   conclui depois de responder todas (é o caso do 🛁 Banho: toalha, coisas, luzes). Kelly
   edita as perguntas em ⚙️ Editar afazeres.
+- **Hook de Stop (`.claude/settings.json` + `.claude/verificar.sh`):** ao encerrar uma sessão
+  que mexeu em código, o harness faz duas cobranças sozinho, em ordem:
+  1. roda `npm test` e `npm run build`, e **bloqueia o encerramento** se algo estiver vermelho;
+  2. se o `CLAUDE.md` não foi tocado, **bloqueia uma vez** pedindo a lição aprendida (aqui e no
+     `instrucoes`) — ou uma frase dizendo de propósito que não houve lição.
+  Existe porque as duas regras dependiam de eu lembrar delas. Detalhes que custaram teste:
+  `git diff` não enxerga arquivo novo (usar `git status --porcelain`); em clone raso de um
+  branch só não existe `origin/main` para comparar, e aí ele verifica assim mesmo, porque não
+  verificar é o erro pior; e a cobrança de registro **só pode bloquear uma vez** — o segundo
+  bloqueio seria laço infinito quando de fato não houve lição, por isso ela olha
+  `stop_hook_active` na entrada do hook e na segunda parada só avisa.
 - **Arquivos-chave:** `src/lib/parser.ts` (leitor da escala), `src/lib/store.ts` (estado e
   ações), `src/views/` (uma tela por aba).
 - **Documentação para o usuário:** `COMO-USAR.md` — atualizar quando algo mudar para ele.

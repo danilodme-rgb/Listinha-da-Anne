@@ -3,6 +3,7 @@ import type { Estado } from '../lib/types'
 import { alterar, exportarEstado, importarEstado, useStatusNuvem } from '../lib/store'
 import { interpretarConfig, lerConfigNuvem, linkDeSincronizacao, salvarConfigNuvem } from '../lib/nuvem'
 import { GaleriaFotos } from '../components/Fotos'
+import { procurarAtualizacao, versaoDoApp } from '../lib/atualizacao'
 
 const RECADO_STATUS: Record<string, string> = {
   desligado: 'Só neste aparelho',
@@ -18,6 +19,7 @@ export function AjustesView({ estado }: { estado: Estado }) {
   const [familia, setFamilia] = useState(config?.familia ?? '')
   const [pin, setPin] = useState(estado.config.pinKelly ?? '')
   const [link, setLink] = useState('')
+  const [procurando, setProcurando] = useState(false)
 
   const baixarBackup = () => {
     const blob = new Blob([JSON.stringify(exportarEstado(), null, 2)], { type: 'application/json' })
@@ -230,6 +232,35 @@ export function AjustesView({ estado }: { estado: Estado }) {
         >
           Permitir avisos
         </button>
+      </div>
+      <div className="cartao">
+        <h2>📦 Versão do app</h2>
+        <p className="ajuda">
+          Os dois apps se atualizam sozinhos: quando sai novidade, o celular troca de versão
+          e a tela recarrega na hora seguinte em que o app estiver aberto. Não precisa
+          desinstalar nem reinstalar nada.
+        </p>
+        <div className="linha" style={{ gap: 8 }}>
+          <code style={{ flex: 1, fontSize: 13, color: 'var(--tinta-fraca)' }}>{versaoDoApp()}</code>
+          <button
+            className="btn"
+            disabled={procurando}
+            onClick={() => {
+              setProcurando(true)
+              void procurarAtualizacao()
+                .then((r) => {
+                  if (r === 'nova') return // a tela ja' vai recarregar sozinha
+                  alert(r === 'atual'
+                    ? 'Tudo certo: você já está com a versão mais nova. ✅'
+                    : 'Este endereço não guarda versão instalada — é sempre a mais nova.')
+                })
+                .catch(() => alert('Não deu para procurar agora. Confira a internet e tente de novo.'))
+                .finally(() => setProcurando(false))
+            }}
+          >
+            {procurando ? 'Procurando…' : 'Procurar novidade'}
+          </button>
+        </div>
       </div>
     </>
   )

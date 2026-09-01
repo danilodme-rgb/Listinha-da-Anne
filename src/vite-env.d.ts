@@ -9,3 +9,6 @@ interface ImportMetaEnv {
   readonly VITE_FB_FAMILIA?: string
 }
 interface ImportMeta { readonly env: ImportMetaEnv }
+
+/** Carimbo do build, trocado pelo Vite (ver vite.config.ts). */
+declare const __VERSAO_APP__: string

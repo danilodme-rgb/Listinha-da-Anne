@@ -2,6 +2,7 @@ import { lerEscala } from '../src/lib/parser'
 import { aceitaDaNuvem } from '../src/lib/sincronia'
 import { deveAvisarPapai, idAvisoPapai, passosFaltando, podeConcluir } from '../src/lib/regras'
 import { emCasaNoMes, emCasaPorMes, emCasaTotal } from '../src/lib/relatorio'
+import { deveRecarregar, podeProcurar } from '../src/lib/atualizacao'
 import type { Estado, TarefaDoDia } from '../src/lib/types'
 
 let falhas = 0
@@ -215,6 +216,18 @@ eq('relatorio: total somado',
   { lidos: 8, emCasa: 4, fora: 4, percentual: 50 })
 
 eq('relatorio: escala vazia', emCasaTotal({}), { lidos: 0, emCasa: 0, fora: 0, percentual: 0 })
+
+eq('atualizacao: versao nova recarrega a tela',
+  deveRecarregar({ ehTroca: true, jaRecarregando: false }), true)
+
+eq('atualizacao: primeira instalacao nao recarrega',
+  deveRecarregar({ ehTroca: false, jaRecarregando: false }), false)
+
+eq('atualizacao: nao recarrega duas vezes',
+  deveRecarregar({ ehTroca: true, jaRecarregando: true }), false)
+
+eq('atualizacao: procura de novo depois de um minuto',
+  [podeProcurar(60_000, 0), podeProcurar(59_999, 0)], [true, false])
 
 console.log(falhas === 0 ? '\nTodos os testes passaram.' : `\n${falhas} teste(s) falharam.`)
 process.exit(falhas === 0 ? 0 : 1)

@@ -180,6 +180,25 @@ sem sinal, dormiu no bolso, ou você só quer ter certeza:
 **Puxe a tela para baixo**, como no Instagram. Aparece *"Atualizando…"* e o app relê tudo da
 nuvem. Chegar ao fim da rolagem faz a mesma coisa, sozinho.
 
+## Versão nova do app chega sozinha
+
+Isso é sobre o **app**, não sobre os dados. Quando eu publico uma mudança, os três endereços
+(`/`, `/anne/` e `/kelly/`) se atualizam sozinhos — inclusive o app já instalado na tela
+inicial dos celulares. O aparelho procura versão nova ao abrir o app, toda vez que ele volta
+para a frente, quando a internet volta e de meia em meia hora com ele aberto. Achou novidade:
+aparece *"✨ Novidade chegando…"* e a tela recarrega sozinha. Ninguém precisa desinstalar e
+instalar de novo.
+
+Duas coisas valem saber:
+
+1. O GitHub leva cerca de um minuto para publicar (aba **Actions** do repositório). Antes
+   disso o celular ainda não tem o que baixar.
+2. Sem internet, o celular segue abrindo a versão que já tinha — e troca assim que a
+   conexão voltar.
+
+Para saber qual versão está num aparelho: app da mamãe → **Ajustes** → **📦 Versão do app**.
+O botão **Procurar novidade** força a busca na hora, sem esperar.
+
 ---
 
 ## Como usar no dia a dia
