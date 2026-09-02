@@ -316,6 +316,11 @@ Para não redescobrir a cada sessão.
   verificar é o erro pior; e a cobrança de registro **só pode bloquear uma vez** — o segundo
   bloqueio seria laço infinito quando de fato não houve lição, por isso ela olha
   `stop_hook_active` na entrada do hook e na segunda parada só avisa.
+  **Branch de prova (teste quebrado de propósito) mora só no remoto.** Para provar uma trava
+  no sentido que ninguém testa — o check reprovando —, o jeito é um branch descartável com um
+  teste que falha; mas o hook de Stop roda na árvore local e não sabe que o vermelho é de
+  propósito, então ele bloqueia o encerramento. Voltar para o branch bom (`git checkout`)
+  antes de encerrar: a prova continua vermelha no GitHub, que é onde ela precisa estar.
 - **Observações do dia (`estado.observacoes`, editadas em EscalaView):** ficam **fora** de
   `estado.escala` de propósito. `aplicarLeitura` reescreve `escala` inteira quando a Kelly cola
   a escala de novo — se a observação morasse lá, o texto dela sumiria na próxima colagem. A
