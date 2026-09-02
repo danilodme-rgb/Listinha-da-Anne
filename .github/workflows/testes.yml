@@ -1,0 +1,37 @@
+# Roda os testes e o build em todo pull request.
+#
+# Existe porque ate' aqui o unico workflow era o de deploy, que so' dispara em
+# push para `main`: um PR podia ser revisado e juntado sem nada ter rodado, e o
+# verde dependia de alguem lembrar de rodar `npm test` na mao (regra 16d).
+#
+# So' `pull_request`: push direto em `main` ja' passa pelo deploy.yml, que roda
+# os mesmos dois comandos antes de publicar. Nao duplicar corridas de propósito.
+name: Testes
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: testes-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  conferir:
+    name: npm test + npm run build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      # Sem os segredos do Firebase de propósito: o build tem de passar sem
+      # eles (o app cai no modo sem sincronizacao), e PR de fora nao os recebe.
+      - run: npm run build
+        env:
+          APP_BASE: /${{ github.event.repository.name }}/
