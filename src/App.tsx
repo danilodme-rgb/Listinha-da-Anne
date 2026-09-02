@@ -177,7 +177,7 @@ export function App({ perfilFixo }: PropsApp) {
           <KellyView estado={estado} ano={ano} mes={mes} aoMudarMes={mudarMes} dia={dia} aoMudarDia={mudarDia} />
         )}
         {aba === 'anne' && (
-          <AnneView estado={estado} ano={ano} mes={mes} aoMudarMes={mudarMes} dia={dia} aoMudarDia={mudarDia} />
+          <AnneView estado={estado} dia={dia} />
         )}
         {aba === 'ajustes' && perfil === 'kelly' && <AjustesView estado={estado} />}
       </main>

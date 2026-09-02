@@ -214,6 +214,10 @@ Para não redescobrir a cada sessão.
   (precisa ter runner e o passo `deploy-pages` verde), não tentar `curl` na URL.
 - **Estado:** `localStorage` (offline-first), com sincronização opcional entre celulares via
   Firebase Realtime Database, configurada em Ajustes (não versionada).
+- **A tela principal da Anne não tem calendário, de propósito.** O calendário dela vive só na
+  aba 📅 Papai (`EscalaView`); `AnneView` recebe apenas `dia` (sempre hoje) e mostra a listinha,
+  o cofrinho e as fotos. Tinha calendário nos dois lugares, e o de baixo ainda mudava o dia da
+  listinha — dava para a Anne ficar num dia passado sem perceber.
 - **Fotos da Anne (`src/lib/fotos.ts`):** ficam em IndexedDB, **de propósito fora do estado
   que sincroniza** — são cópia pessoal do aparelho, não sobem para o Firebase nem para o
   repositório. Ao mexer nisso, manter essa separação: o repositório é público.
@@ -315,6 +319,18 @@ Para não redescobrir a cada sessão.
   a tela **antes** de publicar e erro de publicação vira status de erro. `scripts/testes.ts`
   chama a **validação real do SDK** offline (por isso `--external:firebase` no `npm test` e o
   `localStorage` de mentira em `scripts/ambiente.ts`).
+- **Mudança que o app faz sozinho ao abrir não pode virar pendência local
+  (`sincronizadoAposAutomatica` em `sincronia.ts`, `alterar(fn, automatica)` em `store.ts`):**
+  ao abrir (e toda atualização recarrega a tela), `avisarPapaiNaCidade` criava o aviso do papai
+  **antes** de a nuvem responder — conectar exige baixar o Firebase e autenticar, o que leva
+  segundos. Isso carimbava `atualizadoEm = agora`, o aparelho passava a se achar o mais novo e,
+  quando a escala da Kelly chegava, `decidirNuvem` respondia `publicar`: o celular gravava a
+  própria cópia por cima e **a escala recém-colada sumia dos dois aparelhos**. Agora a mudança
+  automática também avança o `sincronizadoEm`, então quem estava em dia continua em dia e aceita
+  o que vem da nuvem; mudança de verdade que ainda não subiu continua pendente. Buraco que
+  continua aberto: a publicação é do estado **inteiro**, então um toque da Anne nos primeiros
+  segundos (antes da nuvem responder) ainda pode gravar por cima — o conserto de verdade é
+  mesclar por parte, não substituir.
 - **O que volta do Firebase não é o que subiu:** array e objeto vazios **somem**. Lista sem
   tarefas voltava sem a chave `tarefas` e qualquer `for` nela quebrava a tela — com o estado
   quebrado já gravado no `localStorage`. `migrar` normaliza `listas[*].tarefas`; ao mexer no

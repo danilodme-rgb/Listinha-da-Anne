@@ -1,6 +1,8 @@
 import './ambiente'
 import { lerEscala } from '../src/lib/parser'
-import { aceitaDaNuvem, decidirNuvem, semUndefined } from '../src/lib/sincronia'
+import {
+  aceitaDaNuvem, decidirNuvem, semUndefined, sincronizadoAposAutomatica,
+} from '../src/lib/sincronia'
 import { aplicarLeitura, carteira, definirObservacao, enviarLista, exportarEstado, importarEstado } from '../src/lib/store'
 import { initializeApp } from 'firebase/app'
 import { getDatabase, ref, set } from 'firebase/database'
@@ -368,6 +370,27 @@ eq('nuvem: mudanca local mais nova manda publicar, nao ignorar',
   decidirNuvem(5, 10, 3), 'publicar')
 eq('nuvem: mudanca local pendente mas a nuvem e mais nova, aceita',
   decidirNuvem(20, 10, 3), 'aceitar')
+
+// Aviso automatico ao abrir o app nao pode apagar a escala que esta na nuvem.
+// Cenario real: a Kelly cola a escala (nuvem em 200); o celular da Anne, em dia
+// ate' 100, recarrega por causa da atualizacao e cria o aviso do papai em 300 --
+// antes de a nuvem responder (baixar o Firebase e autenticar leva segundos).
+{
+  const emDia = 100
+  const avisoLocal = 300
+  const nuvemComEscala = 200
+  eq('sem o conserto, o aviso automatico grava por cima da escala',
+    decidirNuvem(nuvemComEscala, avisoLocal, emDia), 'publicar')
+  const marcado = sincronizadoAposAutomatica(emDia, avisoLocal, emDia)
+  eq('mudanca automatica mantem o aparelho em dia', marcado, avisoLocal)
+  eq('com o conserto, a escala da nuvem entra',
+    decidirNuvem(nuvemComEscala, avisoLocal, marcado), 'aceitar')
+
+  const pendente = sincronizadoAposAutomatica(250, 300, 100)
+  eq('mudanca de verdade que nao subiu continua pendente', pendente, 100)
+  eq('e o aparelho ainda publica o que so ele tem',
+    decidirNuvem(150, 300, pendente), 'publicar')
+}
 
 // O Firebase nao guarda array vazio: uma lista sem tarefas volta SEM a chave.
 // Antes disso o cofrinho quebrava e o estado quebrado ia parar no localStorage.

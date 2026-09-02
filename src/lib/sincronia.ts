@@ -29,6 +29,27 @@ export function decidirNuvem(
 }
 
 /**
+ * Ate' que horas este aparelho e a nuvem estavam iguais, depois de uma mudanca
+ * **automatica** (aviso criado por regra, nao toque de ninguem).
+ *
+ * O bug que isso conserta: ao abrir o app (toda atualizacao recarrega a tela),
+ * a regra do "papai na cidade" cria o aviso antes de a nuvem responder --
+ * conectar exige baixar o Firebase e autenticar, o que leva segundos. Isso
+ * carimbava `atualizadoEm = agora` e o aparelho passava a se achar o mais novo:
+ * quando a escala da Kelly finalmente chegava, `decidirNuvem` respondia
+ * `publicar` e o aparelho **gravava a propria copia por cima**, apagando a
+ * escala recem-colada de todo mundo.
+ *
+ * Mudanca automatica nao e' pendencia local: quem estava em dia continua em dia.
+ * Quem ja' tinha mudanca de verdade esperando continua com ela pendente.
+ */
+export function sincronizadoAposAutomatica(
+  antesEm: number, depoisEm: number, sincronizadoEm: number,
+): number {
+  return antesEm <= sincronizadoEm ? depoisEm : sincronizadoEm
+}
+
+/**
  * Copia sem nenhuma propriedade `undefined`.
  *
  * O Firebase Realtime Database **recusa** gravar um valor que contenha

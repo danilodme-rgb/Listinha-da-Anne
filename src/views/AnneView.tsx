@@ -1,23 +1,19 @@
 import { useState } from 'react'
 import type { Estado, TarefaDoDia } from '../lib/types'
-import { brl, curta, ehHoje, horaCurta, hoje, porExtenso, somaDias } from '../lib/dates'
+import { brl, curta, ehHoje, horaCurta, porExtenso } from '../lib/dates'
 import {
   alternarPassoTarefa, avisosDe, carteira, comPapai, concluirTarefa, confirmarRecebimento,
   desfazerTarefa, listaDe, marcarAvisosLidos, marcarListaVista,
 } from '../lib/store'
 import { passosFaltando } from '../lib/regras'
-import { Calendario } from '../components/Calendario'
 import { Festa } from '../components/Festa'
 import { BannerFotos, GaleriaFotos } from '../components/Fotos'
 import { Modal } from '../components/Modal'
 
 interface Props {
   estado: Estado
-  ano: number
-  mes: number
-  aoMudarMes: (ano: number, mes: number) => void
+  /** Sempre o dia de hoje: a tela da Anne nao navega no calendario. */
   dia: string
-  aoMudarDia: (data: string) => void
 }
 
 const ELOGIOS = [
@@ -25,7 +21,7 @@ const ELOGIOS = [
   'Mandou bem! 🚀', 'Orgulho da mamãe! 🥰', 'Uhuul! 🏆',
 ]
 
-export function AnneView({ estado, ano, mes, aoMudarMes, dia, aoMudarDia }: Props) {
+export function AnneView({ estado, dia }: Props) {
   const [festa, setFesta] = useState<{ titulo: string; detalhe: string } | null>(null)
   const [trocandoFotos, setTrocandoFotos] = useState(false)
   const [perguntando, setPerguntando] = useState<string | null>(null)
@@ -189,27 +185,6 @@ export function AnneView({ estado, ano, mes, aoMudarMes, dia, aoMudarDia }: Prop
                 Você já recebeu {brl(c.pago)} até hoje. Que economia! 🌟
               </p>
             )}
-          </div>
-
-          <div className="cartao">
-            <h2>✈️ Onde está o papai</h2>
-            <p className="ajuda">
-              Azul é dia de voo. Verde é dia de folga. O 👨 mostra os dias que você fica com ele.
-            </p>
-            <Calendario
-              estado={estado}
-              ano={ano}
-              mes={mes}
-              aoMudarMes={aoMudarMes}
-              selecionado={dia}
-              aoClicar={aoMudarDia}
-              mostrarListas
-            />
-            <div className="linha" style={{ gap: 8, marginTop: 12 }}>
-              <button className="btn pequeno contorno" style={{ flex: 1 }} onClick={() => aoMudarDia(somaDias(dia, -1))}>‹ Dia anterior</button>
-              <button className="btn pequeno" style={{ flex: 1 }} onClick={() => aoMudarDia(hoje())}>Hoje</button>
-              <button className="btn pequeno contorno" style={{ flex: 1 }} onClick={() => aoMudarDia(somaDias(dia, 1))}>Próximo dia ›</button>
-            </div>
           </div>
 
           <div className="cartao">
