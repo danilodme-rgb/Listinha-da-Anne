@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import type { Afazer, Aviso, Estado, ListaDoDia, Perfil, StatusDia, TarefaDoDia } from './types'
 import { brl, chave, curta, hoje, somaDias, paraData } from './dates'
-import { decidirNuvem } from './sincronia'
+import { decidirNuvem, sincronizadoAposAutomatica } from './sincronia'
 import { deveAvisarPapai, idAvisoPapai, passosFaltando } from './regras'
 import {
   iniciarNuvem, lerConfigNuvem, lerDaNuvemAgora, nuvemAtiva, publicarNaNuvem,
@@ -139,13 +139,23 @@ function persistir() {
   } catch { /* armazenamento cheio: segue em memoria */ }
 }
 
-/** Aplica uma mudanca local: carimba a hora, salva e publica na nuvem. */
-export function alterar(fn: (rascunho: Estado) => void): void {
+/**
+ * Aplica uma mudanca local: carimba a hora, salva e publica na nuvem.
+ *
+ * `automatica` marca a mudanca que o proprio app faz sozinho (aviso criado por
+ * regra) -- ela nao pode virar pendencia local, senao o aparelho se acha o mais
+ * novo e grava por cima do que a nuvem tinha. Veja `sincronizadoAposAutomatica`.
+ */
+export function alterar(fn: (rascunho: Estado) => void, automatica = false): void {
   const rascunho: Estado = structuredClone(estado)
   fn(rascunho)
+  const antesEm = estado.atualizadoEm
   rascunho.atualizadoEm = Date.now()
   estado = rascunho
   persistir()
+  if (automatica) {
+    marcarSincronizado(sincronizadoAposAutomatica(antesEm, rascunho.atualizadoEm, sincronizadoEm))
+  }
   // A tela e' avisada antes de publicar: a mudanca local ja' vale, e falha de
   // nuvem nao pode impedir a tela de mostrar o que a Kelly acabou de fazer.
   avisarTodos()
@@ -566,6 +576,8 @@ export function confirmarRecebimento(): number {
 export function avisarPapaiNaCidade(): void {
   const data = hoje()
   if (!deveAvisarPapai(estado, data)) return
+  // automatica: o app cria esse aviso sozinho ao abrir, antes de a nuvem
+  // responder -- nao pode fazer o aparelho gravar a propria copia por cima.
   alterar((e) => {
     e.avisos.unshift({
       id: idAvisoPapai(data, 'anne'), para: 'anne', em: Date.now(),
@@ -579,7 +591,7 @@ export function avisarPapaiNaCidade(): void {
       texto: 'A escala marca folga — a Anne pode ficar com o papai.',
       lido: false,
     })
-  })
+  }, true)
 }
 
 export interface Carteira {
