@@ -15,7 +15,7 @@ de Stop cobra isso sozinho.
 
 <!-- inicio-geral -->
 
-> **Bloco geral copiado de `instrucoes@48513cd`.** Não editar aqui: regra nova entra
+> **Bloco geral copiado de `instrucoes@57950ae`.** Não editar aqui: regra nova entra
 > primeiro em `danilodme-rgb/instrucoes` e volta para cá por cópia. Cópia diferente da
 > fonte, atualizo esta antes de trabalhar.
 
@@ -53,11 +53,24 @@ de Stop cobra isso sozinho.
     worker, atualização de app instalado, foco de janela, rede caindo, permissão de sistema:
     teste de função pura passa verde com a lógica errada. Rodar o ciclo inteiro antes de
     dizer que funciona. Caso real: uma função de "deve recarregar?" passou nos testes e o app
-    não recarregava nada no navegador.
+    não recarregava nada no navegador. E a ferramenta de teste também mente sobre o
+    ambiente: o "modo offline" do Playwright não vale para as requisições do service
+    worker — o teste honesto foi derrubar o servidor.
+11e. **O dado que volta de um serviço de fora não é o que você mandou.** Banco, API e fila
+    normalizam o que recebem — array vazio some, campo nulo some, número vira string. Trate
+    tudo que volta como entrada não confiável e normalize na porta de entrada, senão um
+    `for` num campo que sumiu quebra a tela — e o estado quebrado ainda é gravado no
+    aparelho.
 11c. **Arquivo gerado só está pronto quando um leitor de terceiro abre.** PDF, CSV, ICS,
     imagem: o meu próprio gerador dizendo "gerou" não prova nada. Caso real: um PDF passou
     em todos os testes que eu mesmo escrevi e a primeira biblioteca de fora leu "0 páginas"
     — um ponteiro interno apontava para o objeto errado.
+11d. **Integração com serviço de fora falha calada.** Toda escrita para um serviço externo
+    precisa de (a) tratamento de erro que **apareça para o usuário** e (b) não pode derrubar
+    nem bloquear o caminho local. E o contrato dele se testa com o validador dele — quase
+    todo SDK valida offline. Caso real: o banco recusava o estado inteiro por causa de um
+    único campo `undefined`, o app mostrava "Sincronizado ✅" e nada chegava no outro
+    aparelho por dias.
 12. **Texto de produto é para quem vai usar, não para mim.** Frases curtas, zero jargão
     técnico, formatos locais (R$, datas em pt-BR). Quando o usuário for criança, mais curto
     ainda e emoji como pista visual.
@@ -226,6 +239,37 @@ Para não redescobrir a cada sessão.
   páginas". Há teste que segue o `/Kids` e confere que ele aponta para uma página de verdade.
   `compartilharPdf` usa `navigator.share` com arquivo (o WhatsApp aparece na folha de
   compartilhar do celular) e cai para download quando o navegador não suporta.
+- **Publicar na nuvem (`src/lib/nuvem.ts` + `sincronia.ts`) — o bug que travou tudo:** o
+  Firebase **recusa gravar qualquer estado que contenha `undefined`**, e recusa **lançando na
+  hora** (não é promessa rejeitada). Um dia de folga lido virava `{ status, nota: undefined }`,
+  e a gravação inteira morria: nada da escala subia e, como o `set` ficava antes do
+  `avisarTodos()` em `alterar`, a própria tela da Kelly parava de re-renderizar. Três camadas
+  de conserto, não desfazer: (1) `semUndefined` limpa o estado antes de publicar; (2) o estado
+  não guarda mais `undefined` (dia sem anotação não ganha a chave `nota`); (3) `alterar` avisa
+  a tela **antes** de publicar e erro de publicação vira status de erro. `scripts/testes.ts`
+  chama a **validação real do SDK** offline (por isso `--external:firebase` no `npm test` e o
+  `localStorage` de mentira em `scripts/ambiente.ts`).
+- **O que volta do Firebase não é o que subiu:** array e objeto vazios **somem**. Lista sem
+  tarefas voltava sem a chave `tarefas` e qualquer `for` nela quebrava a tela — com o estado
+  quebrado já gravado no `localStorage`. `migrar` normaliza `listas[*].tarefas`; ao mexer no
+  formato do estado, normalizar na entrada é obrigatório.
+- **Republicar é parte da sincronização:** `receberDaNuvem` publica quando este aparelho tem o
+  estado mais novo (`decidirNuvem` devolve `'publicar'`), e `aoNuvemVazia` publica na primeira
+  conexão com o banco vazio. Sem isso, uma gravação perdida ficava perdida para sempre — a
+  escala já colada só subiria se a Kelly colasse de novo.
+- **Service worker (`scripts/sw.js`), armadilhas medidas no navegador:** só guarda resposta com
+  `ok` (um 404 de arquivo apagado pela publicação nova envenenava a URL para sempre); o
+  fallback de HTML vale **só** para navegação e aponta para a entrada aberta (`./` a partir da
+  requisição), nunca para a raiz — devolver HTML no lugar de um `.js` dá tela branca; resposta
+  de navegação que veio de redirecionamento é reconstruída; o cache tem teto (`MAX_ITENS`,
+  podado no `activate`, mais antigos primeiro); e a página manda ao worker o que acabou de
+  carregar (`{ tipo: 'guardar' }`), porque na primeira visita nada passa por ele — sem isso,
+  instalar o app e ficar sem internet antes da segunda abertura deixava o app **sem abrir**
+  (medido: 0 itens em cache e `ERR_FAILED`; com o conserto, 4 itens e abre normal).
+- **Detectar versão nova (`atualizacao.ts`):** `ehTroca` olha `reg.waiting` **ou**
+  `reg.installing` — com `skipWaiting` o worker novo quase nunca fica em `waiting`, e o
+  navegador pode tê-lo começado antes do nosso `register`, caso em que o `updatefound` nunca
+  chega e a tela não recarregaria.
 - **Arquivos-chave:** `src/lib/parser.ts` (leitor da escala), `src/lib/store.ts` (estado e
   ações), `src/views/` (uma tela por aba).
 - **Documentação para o usuário:** `COMO-USAR.md` — atualizar quando algo mudar para ele.

@@ -11,41 +11,107 @@ const VERSAO = '__VERSAO__'
 // mostrar se a internet caisse logo depois de atualizar.
 const CACHE = 'listinha-v2'
 
+// Teto de itens guardados. As chaves saem na ordem em que entraram, entao o
+// que e' descartado primeiro e' o das versoes mais antigas. Sem teto, cada
+// publicacao empilha um conjunto novo de arquivos e um dia a cota estoura.
+const MAX_ITENS = 120
+
 self.addEventListener('install', (evento) => {
   self.skipWaiting()
   evento.waitUntil(caches.open(CACHE))
 })
 
 self.addEventListener('activate', (evento) => {
-  evento.waitUntil(
-    caches.keys().then((chaves) =>
-      Promise.all(chaves.filter((c) => c !== CACHE).map((c) => caches.delete(c))),
-    ).then(() => self.clients.claim()),
-  )
+  evento.waitUntil((async () => {
+    const chaves = await caches.keys()
+    await Promise.all(chaves.filter((c) => c !== CACHE).map((c) => caches.delete(c)))
+    await podar()
+    await self.clients.claim()
+  })())
 })
 
-// Quem quiser saber qual versao esta' instalada neste aparelho.
+async function podar() {
+  try {
+    const cache = await caches.open(CACHE)
+    const chaves = await cache.keys()
+    if (chaves.length <= MAX_ITENS) return
+    await Promise.all(chaves.slice(0, chaves.length - MAX_ITENS).map((k) => cache.delete(k)))
+  } catch { /* sem espaco ou sem permissao: segue sem podar */ }
+}
+
+/**
+ * So' guarda resposta boa. `fetch` nao rejeita em 404 -- e um 404 guardado no
+ * lugar de um `.js` que a publicacao nova apagou envenena aquela URL para
+ * sempre, porque nunca mais vai existir um 200 para sobrescrever.
+ */
+async function guardar(req, resposta) {
+  if (!resposta || !resposta.ok || resposta.type === 'opaque') return
+  try {
+    const cache = await caches.open(CACHE)
+    await cache.put(req, resposta)
+  } catch { /* cota estourada: o app segue funcionando, so' sem cache novo */ }
+}
+
 self.addEventListener('message', (evento) => {
-  if (evento.data === 'versao') evento.source?.postMessage({ tipo: 'versao', versao: VERSAO })
+  const dado = evento.data
+  if (dado === 'versao') {
+    evento.source?.postMessage({ tipo: 'versao', versao: VERSAO })
+    return
+  }
+  // A pagina manda o que acabou de carregar. Na primeira visita nada passa
+  // pelo service worker (ele so' e' registrado depois), e sem isso quem
+  // instalasse o app e ficasse sem internet nao conseguiria abrir.
+  if (dado && dado.tipo === 'guardar' && Array.isArray(dado.urls)) {
+    evento.waitUntil((async () => {
+      const cache = await caches.open(CACHE)
+      for (const url of dado.urls.slice(0, 60)) {
+        try {
+          if (await cache.match(url)) continue
+          const r = await fetch(url, { cache: 'no-cache' })
+          if (r.ok) await cache.put(url, r)
+        } catch { /* uma url que falhou nao pode parar as outras */ }
+      }
+    })())
+  }
 })
 
 // Network-first: sempre tenta a rede e guarda uma copia para quando faltar internet.
 self.addEventListener('fetch', (evento) => {
   const req = evento.request
   if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return
+  const navegacao = req.mode === 'navigate'
+
   // Abertura de pagina vai direto ao servidor, ignorando o cache HTTP: o GitHub
   // Pages guarda o HTML por 10 minutos, e HTML velho aponta para arquivos .js
   // que a publicacao nova ja' apagou (tela branca).
-  const daRede = req.mode === 'navigate'
+  const daRede = navegacao
     ? fetch(req.url, { cache: 'reload', credentials: 'same-origin' })
     : fetch(req)
+
   evento.respondWith(
     daRede
       .then((resposta) => {
-        const copia = resposta.clone()
-        void caches.open(CACHE).then((c) => c.put(req, copia))
+        void guardar(req, resposta.clone())
+        // navegacao nao aceita resposta marcada como vinda de redirecionamento
+        if (navegacao && resposta.redirected) {
+          return new Response(resposta.body, {
+            status: resposta.status,
+            statusText: resposta.statusText,
+            headers: resposta.headers,
+          })
+        }
         return resposta
       })
-      .catch(() => caches.match(req).then((r) => r ?? caches.match('./'))),
+      .catch(async () => {
+        const guardada = await caches.match(req)
+        if (guardada) return guardada
+        // Sem internet e sem copia: para `.js` e `.css` e' melhor falhar do que
+        // devolver HTML, que o navegador recusaria por tipo errado e daria tela
+        // branca. So' navegacao cai para a pagina de entrada -- a do proprio
+        // endereco aberto (/anne/, /kelly/ ou a raiz), nunca a de outro perfil.
+        if (!navegacao) return Response.error()
+        const entrada = await caches.match(new URL('./', req.url).href)
+        return entrada ?? (await caches.match(self.registration.scope)) ?? Response.error()
+      }),
   )
 })

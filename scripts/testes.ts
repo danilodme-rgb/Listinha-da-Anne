@@ -1,5 +1,9 @@
+import './ambiente'
 import { lerEscala } from '../src/lib/parser'
-import { aceitaDaNuvem } from '../src/lib/sincronia'
+import { aceitaDaNuvem, decidirNuvem, semUndefined } from '../src/lib/sincronia'
+import { aplicarLeitura, carteira, definirObservacao, enviarLista, exportarEstado, importarEstado } from '../src/lib/store'
+import { initializeApp } from 'firebase/app'
+import { getDatabase, ref, set } from 'firebase/database'
 import { deveAvisarPapai, idAvisoPapai, passosFaltando, podeConcluir } from '../src/lib/regras'
 import { emCasaNoMes, emCasaPorMes, emCasaTotal } from '../src/lib/relatorio'
 import { deveRecarregar, podeProcurar } from '../src/lib/atualizacao'
@@ -297,6 +301,87 @@ const estadoRelatorio = {
   eq('relatorio: resumo do mes conta os dias lidos',
     texto.some((t) => t === '2 dias de folga · 1 dia de trabalho'),
     true)
+}
+
+
+// ---------------------------------------------------------------- publicar na nuvem
+
+eq('semUndefined: tira a propriedade que o Firebase recusa',
+  semUndefined({ status: 'trabalho', nota: undefined }),
+  { status: 'trabalho' })
+
+eq('semUndefined: limpa em profundidade e nao mexe no resto',
+  semUndefined({ escala: { '2026-09-01': { status: 'folga', nota: undefined } }, avisos: [{ id: 'a', lido: false }], n: 0 }),
+  { escala: { '2026-09-01': { status: 'folga' } }, avisos: [{ id: 'a', lido: false }], n: 0 })
+
+eq('semUndefined: buraco em lista some', semUndefined([1, undefined, 2]), [1, 2])
+
+// O teste acima e' o meu; este e' o do Firebase de verdade -- e' ele quem recusava
+// a escala inteira quando um dia lido nao tinha anotacao.
+{
+  const app = initializeApp(
+    { apiKey: 'teste', databaseURL: 'https://exemplo-default-rtdb.firebaseio.com', projectId: 'exemplo' },
+    `teste-${Date.now()}`,
+  )
+  const caminho = ref(getDatabase(app), 'familias/teste/estado')
+  const sujo = { atualizadoEm: 1, escala: { '2026-09-02': { status: 'trabalho', nota: undefined } } }
+
+  let recusou = false
+  try { void set(caminho, sujo).catch(() => {}) } catch { recusou = true }
+  eq('nuvem: o Firebase recusa mesmo um estado com undefined', recusou, true)
+
+  let aceitou = true
+  try { void set(caminho, semUndefined(sujo)).catch(() => {}) } catch { aceitou = false }
+  eq('nuvem: com semUndefined, o Firebase aceita', aceitou, true)
+}
+
+
+// O caminho real: a Kelly cola a escala e manda a listinha. E' esse estado que
+// vai para a nuvem -- se ele tiver um unico undefined, nada sincroniza.
+{
+  aplicarLeitura(2026, 8, { '1': 'folga', '2': 'trabalho' }, { '2': 'CGH-SDU' }, [])
+  definirObservacao('2026-09-01', 'chega 13h')
+  enviarLista('2026-09-01')
+  const estado = exportarEstado()
+
+  eq('estado: dia lido sem anotacao nao ganha chave nota',
+    Object.keys(estado.escala['2026-09-01']), ['status'])
+  eq('estado: dia com anotacao mantem a nota',
+    estado.escala['2026-09-02'].nota, 'CGH-SDU')
+
+  const app2 = initializeApp(
+    { apiKey: 'teste', databaseURL: 'https://exemplo-default-rtdb.firebaseio.com', projectId: 'exemplo' },
+    `real-${Date.now()}`,
+  )
+  const caminho2 = ref(getDatabase(app2), 'familias/teste/estado')
+  let publicou = true
+  let erro = ''
+  try { void set(caminho2, estado).catch(() => {}) } catch (e) { publicou = false; erro = String((e as Error).message).slice(0, 120) }
+  eq(`estado de verdade e' aceito pelo Firebase${publicou ? '' : ` (${erro})`}`, publicou, true)
+}
+
+
+eq('nuvem: estado igual nao faz nada', decidirNuvem(10, 10, 0), 'igual')
+eq('nuvem: sem mudanca local pendente, aceita o que veio (mesmo com relogio atrasado)',
+  decidirNuvem(5, 10, 10), 'aceitar')
+eq('nuvem: mudanca local mais nova manda publicar, nao ignorar',
+  decidirNuvem(5, 10, 3), 'publicar')
+eq('nuvem: mudanca local pendente mas a nuvem e mais nova, aceita',
+  decidirNuvem(20, 10, 3), 'aceitar')
+
+// O Firebase nao guarda array vazio: uma lista sem tarefas volta SEM a chave.
+// Antes disso o cofrinho quebrava e o estado quebrado ia parar no localStorage.
+{
+  importarEstado({
+    versao: 3, atualizadoEm: 1, escala: {}, observacoes: {}, comPapai: {}, comPapaiAutomatico: true,
+    afazeres: [], listas: { '2026-09-02': { data: '2026-09-02', recado: 'oi' } },
+    pagamentos: [], avisos: [], config: { pinKelly: null, somConquista: true },
+  })
+  const daNuvem = exportarEstado()
+  eq('nuvem: lista que voltou sem tarefas vira lista vazia', daNuvem.listas['2026-09-02'].tarefas, [])
+  let quebrou = false
+  try { carteira(daNuvem) } catch { quebrou = true }
+  eq('nuvem: o cofrinho aguenta o que voltou da nuvem', quebrou, false)
 }
 
 console.log(falhas === 0 ? '\nTodos os testes passaram.' : `\n${falhas} teste(s) falharam.`)

@@ -57,7 +57,10 @@ export function vigiarAtualizacoes(caminhoDoSw: string): void {
     .register(caminhoDoSw, { updateViaCache: 'none' })
     .then((reg) => {
       registro = reg
-      if (reg.active && reg.waiting) ehTroca = true
+      // `installing` tambem conta: com skipWaiting o service worker novo quase
+      // nunca fica em `waiting`, e o navegador ja' pode te-lo comecado antes
+      // deste registro -- nesse caso o `updatefound` abaixo nunca chega.
+      if (reg.active && (reg.waiting || reg.installing)) ehTroca = true
       reg.addEventListener('updatefound', () => { if (reg.active) ehTroca = true })
       let ultima = Date.now()
       const procurar = () => {
@@ -66,6 +69,7 @@ export function vigiarAtualizacoes(caminhoDoSw: string): void {
         ultima = agora
         void reg.update().catch(() => { /* sem internet: fica para a proxima */ })
       }
+      guardarOQueJaCarregou()
       setInterval(procurar, INTERVALO)
       window.addEventListener('focus', procurar)
       window.addEventListener('online', procurar)
@@ -87,6 +91,23 @@ export async function procurarAtualizacao(): Promise<'nova' | 'atual' | 'indispo
   if (!reg) return 'indisponivel'
   await reg.update()
   return reg.installing || reg.waiting ? 'nova' : 'atual'
+}
+
+/**
+ * Manda o service worker guardar o que esta pagina acabou de carregar.
+ *
+ * Na primeira visita nada passa por ele (so' e' registrado depois do `load`):
+ * quem instalasse o app e ficasse sem internet antes de abrir de novo nao
+ * conseguiria abrir.
+ */
+function guardarOQueJaCarregou(): void {
+  void navigator.serviceWorker.ready.then((reg) => {
+    const urls = [
+      location.href,
+      ...performance.getEntriesByType('resource').map((r) => r.name),
+    ].filter((u) => u.startsWith(location.origin))
+    reg.active?.postMessage({ tipo: 'guardar', urls })
+  }).catch(() => { /* sem service worker: o app funciona igual, so' nao guarda */ })
 }
 
 function avisarERecarregar(): void {

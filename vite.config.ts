@@ -5,8 +5,10 @@ import react from '@vitejs/plugin-react'
 
 // Carimbo desta publicacao. Muda a cada build -- e' o que permite ao celular
 // perceber que existe versao nova e se atualizar sozinho.
+// `||` e nao `??`: GITHUB_SHA vazio daria carimbo vazio e igual em todo build,
+// e a atualizacao automatica morreria em silencio.
 const VERSAO =
-  process.env.GITHUB_SHA?.slice(0, 7) ??
+  process.env.GITHUB_SHA?.slice(0, 7) ||
   new Date().toISOString().slice(0, 19).replace(/[-:T]/g, '')
 
 // O service worker mora em scripts/sw.js (fora de public/) porque precisa
