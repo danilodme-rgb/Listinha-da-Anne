@@ -15,9 +15,10 @@ de Stop cobra isso sozinho.
 
 <!-- inicio-geral -->
 
-> **Bloco geral copiado de `instrucoes@3b4a3b6`.** Não editar aqui: regra nova entra
+> **Bloco geral copiado de `instrucoes@5877970`.** Não editar aqui: regra nova entra
 > primeiro em `danilodme-rgb/instrucoes` e volta para cá por cópia. Cópia diferente da
 > fonte, atualizo esta antes de trabalhar.
+
 ## 1. Como responder
 
 1. **Toda decisão vem com uma recomendação.** Nunca apresentar opções sem dizer qual eu
@@ -177,6 +178,12 @@ de Stop cobra isso sozinho.
     lição (16b), a pergunta seguinte é **o que a cobra sozinha** — um teste, uma verificação no
     build, um passo de CI. ⚠ E maquinário só vale **ligado**: arquivo presente e não registrado
     na configuração é trava desligada, e parece protegida.
+16e. **Trava que confere uma lista escrita à mão só confere quem está na lista.** Alvo novo —
+    repositório, arquivo, rota, ambiente — nasce fora dela, e a trava fica verde por não ter
+    procurado (8c). O padrão se inverte: a trava **descobre os alvos sozinha** e cobra todos;
+    quem fica de fora vai escrito, com o motivo. E ela precisa saber quando **não conseguiu ver
+    tudo** — uma consulta de controle que sabidamente traria resultado — senão alcance reduzido
+    passa por varredura completa.
 
 ## 5. Economia de token
 
