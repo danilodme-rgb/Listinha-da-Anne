@@ -15,7 +15,7 @@ de Stop cobra isso sozinho.
 
 <!-- inicio-geral -->
 
-> **Bloco geral copiado de `instrucoes@5877970`.** Não editar aqui: regra nova entra
+> **Bloco geral copiado de `instrucoes@a957be5`.** Não editar aqui: regra nova entra
 > primeiro em `danilodme-rgb/instrucoes` e volta para cá por cópia. Cópia diferente da
 > fonte, atualizo esta antes de trabalhar.
 
@@ -183,7 +183,10 @@ de Stop cobra isso sozinho.
     procurado (8c). O padrão se inverte: a trava **descobre os alvos sozinha** e cobra todos;
     quem fica de fora vai escrito, com o motivo. E ela precisa saber quando **não conseguiu ver
     tudo** — uma consulta de controle que sabidamente traria resultado — senão alcance reduzido
-    passa por varredura completa.
+    passa por varredura completa. ⚠ **A consulta de controle não vale se o próprio ambiente a
+    satisfizer por acidente.** A trava sempre enxerga o lugar onde ela roda; usar isso como prova
+    de alcance é ficar verde por tautologia. O controle tem de ser algo que o ambiente reduzido
+    **não** consegue responder.
 
 ## 5. Economia de token
 
