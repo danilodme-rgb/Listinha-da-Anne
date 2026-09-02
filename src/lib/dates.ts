@@ -68,3 +68,14 @@ export function horaCurta(ts: number): string {
   const d = new Date(ts)
   return `${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
+
+/**
+ * Quando o aviso chegou. Aviso de hoje mostra so' a hora; de outro dia leva a
+ * data junto, senao um recado de dias atras se disfarca de recado de agora.
+ */
+export function quandoCurto(ts: number): string {
+  const dia = chave(new Date(ts))
+  if (dia === hoje()) return horaCurta(ts)
+  if (dia === somaDias(hoje(), -1)) return `ontem ${horaCurta(ts)}`
+  return `${curta(dia)} ${horaCurta(ts)}`
+}

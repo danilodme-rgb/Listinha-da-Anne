@@ -1,12 +1,18 @@
 import './ambiente'
 import { lerEscala } from '../src/lib/parser'
+import { curta, hoje, paraData, quandoCurto, somaDias } from '../src/lib/dates'
 import {
   aceitaDaNuvem, decidirNuvem, semUndefined, sincronizadoAposAutomatica,
 } from '../src/lib/sincronia'
-import { aplicarLeitura, carteira, definirObservacao, enviarLista, exportarEstado, importarEstado } from '../src/lib/store'
+import {
+  aplicarLeitura, carteira, conferirAvisoDoPapai, definirDia, definirObservacao, enviarLista,
+  exportarEstado, importarEstado,
+} from '../src/lib/store'
 import { initializeApp } from 'firebase/app'
 import { getDatabase, ref, set } from 'firebase/database'
-import { deveAvisarPapai, idAvisoPapai, passosFaltando, podeConcluir } from '../src/lib/regras'
+import {
+  avisosPapaiVencidos, dataDoAvisoPapai, deveAvisarPapai, idAvisoPapai, passosFaltando, podeConcluir,
+} from '../src/lib/regras'
 import { emCasaNoMes, emCasaPorMes, emCasaTotal } from '../src/lib/relatorio'
 import { deveRecarregar, podeProcurar } from '../src/lib/atualizacao'
 import { escaparPdf, montarPdf, paraWinAnsi, quebrarTexto } from '../src/lib/pdf'
@@ -175,6 +181,29 @@ eq('aviso de outro dia nao bloqueia',
     estadoCom({ '2025-09-11': { status: 'folga' } }, [aviso(idAvisoPapai('2025-09-10', 'anne'))]),
     '2025-09-11',
   ), true)
+
+// Aviso do papai que nao vale mais. Foi o caso real: a Kelly mexeu no calendario,
+// o Alexandre passou a trabalhar e o recado "ele esta na cidade hoje" continuou
+// no fim da tela dela -- avisos so' eram criados, nunca retirados.
+
+eq('id do aviso do papai devolve o dia', dataDoAvisoPapai(idAvisoPapai('2025-09-10', 'kelly')), '2025-09-10')
+eq('aviso de outro tipo nao e do papai', dataDoAvisoPapai('av_123'), null)
+
+const comAvisoPapai = (escala: Estado['escala'], data: string) =>
+  avisosPapaiVencidos(estadoCom(escala, [aviso(idAvisoPapai(data, 'kelly'))]), '2025-09-10')
+
+eq('dia virou trabalho: o aviso de hoje vence',
+  comAvisoPapai({ '2025-09-10': { status: 'trabalho' } }, '2025-09-10'),
+  [idAvisoPapai('2025-09-10', 'kelly')])
+eq('folga de hoje: o aviso continua valendo',
+  comAvisoPapai({ '2025-09-10': { status: 'folga' } }, '2025-09-10'), [])
+eq('aviso de dia que ja passou vence',
+  comAvisoPapai({ '2025-09-09': { status: 'folga' } }, '2025-09-09'),
+  [idAvisoPapai('2025-09-09', 'kelly')])
+eq('hoje sem escala lida: nao apaga (pode ser aparelho sem a escala ainda)',
+  comAvisoPapai({}, '2025-09-10'), [])
+eq('aviso de outro tipo nunca vence',
+  avisosPapaiVencidos(estadoCom({}, [aviso('av_lista_1')]), '2025-09-10'), [])
 
 // ---------------------------------------------------------------- perguntinhas do banho
 
@@ -405,6 +434,51 @@ eq('nuvem: mudanca local pendente mas a nuvem e mais nova, aceita',
   let quebrou = false
   try { carteira(daNuvem) } catch { quebrou = true }
   eq('nuvem: o cofrinho aguenta o que voltou da nuvem', quebrou, false)
+}
+
+// ---------------------------------------------------------------- ciclo do aviso do papai
+// Store de verdade: escala com folga hoje cria o aviso; a Kelly corrige o dia
+// para trabalho e o aviso tem de sair sozinho na proxima conferida.
+{
+  const hojeK = hoje()
+  const d = paraData(hojeK)
+  importarEstado({
+    versao: 3, atualizadoEm: 1, escala: { [hojeK]: { status: 'folga' } }, observacoes: {},
+    comPapai: {}, comPapaiAutomatico: true, afazeres: [], listas: {}, pagamentos: [],
+    avisos: [], config: { pinKelly: null, somConquista: true },
+  })
+  conferirAvisoDoPapai()
+  eq('folga hoje: as duas recebem o aviso',
+    exportarEstado().avisos.map((a) => a.id).sort(),
+    [idAvisoPapai(hojeK, 'anne'), idAvisoPapai(hojeK, 'kelly')].sort())
+
+  definirDia(hojeK, 'trabalho')
+  conferirAvisoDoPapai()
+  eq('dia corrigido para trabalho: o aviso some', exportarEstado().avisos, [])
+
+  // dia de ontem com folga: o aviso de ontem nao pode continuar dizendo "hoje"
+  const ontem = somaDias(hojeK, -1)
+  importarEstado({
+    versao: 3, atualizadoEm: 1, escala: { [ontem]: { status: 'folga' } }, observacoes: {},
+    comPapai: {}, comPapaiAutomatico: true, afazeres: [], listas: {}, pagamentos: [],
+    avisos: [{
+      id: idAvisoPapai(ontem, 'kelly'), para: 'kelly', em: d.getTime() - 86400000,
+      titulo: 'Alexandre está na cidade hoje 👨‍✈️', texto: '', lido: false,
+    }],
+    config: { pinKelly: null, somConquista: true },
+  })
+  conferirAvisoDoPapai()
+  eq('aviso de ontem nao sobrevive ao dia seguinte', exportarEstado().avisos, [])
+}
+
+// Aviso antigo tem de mostrar a data: so' a hora fazia recado de dias atras
+// parecer recado de agora.
+{
+  const meioDia = (k: string) => { const x = paraData(k); x.setHours(12, 34); return x.getTime() }
+  eq('aviso de hoje mostra so a hora', quandoCurto(meioDia(hoje())), '12:34')
+  eq('aviso de ontem vem marcado', quandoCurto(meioDia(somaDias(hoje(), -1))), 'ontem 12:34')
+  eq('aviso mais antigo vem com a data',
+    quandoCurto(meioDia(somaDias(hoje(), -5))), `${curta(somaDias(hoje(), -5))} 12:34`)
 }
 
 console.log(falhas === 0 ? '\nTodos os testes passaram.' : `\n${falhas} teste(s) falharam.`)

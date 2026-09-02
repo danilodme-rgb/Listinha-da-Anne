@@ -31,3 +31,33 @@ export function passosFaltando(t: TarefaDoDia): number {
 export function podeConcluir(t: TarefaDoDia): boolean {
   return !t.feita && passosFaltando(t) === 0
 }
+
+const PREFIXO_PAPAI = 'av_papai_'
+
+/** Data ('AAAA-MM-DD') do aviso do papai; null quando o aviso e' de outro tipo. */
+export function dataDoAvisoPapai(id: string): string | null {
+  if (!id.startsWith(PREFIXO_PAPAI)) return null
+  const data = id.slice(PREFIXO_PAPAI.length).replace(/^(anne|kelly)_/, '')
+  return /^\d{4}-\d{2}-\d{2}$/.test(data) ? data : null
+}
+
+/**
+ * Avisos "o papai esta na cidade" que nao valem mais: os de dias que ja'
+ * passaram e os do dia de hoje quando a escala passou a marcar trabalho (a
+ * Kelly colou outra escala ou corrigiu o dia na mao). Sem isso o recado de um
+ * dia de folga antigo continua no fim da tela dizendo "hoje" enquanto o
+ * Alexandre esta' voando.
+ *
+ * Dia de hoje SEM escala lida nao entra: pode ser so' um aparelho que ainda nao
+ * baixou a escala da nuvem, e apagar por causa disso publicaria a copia velha
+ * dele por cima da boa.
+ */
+export function avisosPapaiVencidos(e: Estado, hoje: string): string[] {
+  const vencidos: string[] = []
+  for (const a of e.avisos) {
+    const data = dataDoAvisoPapai(a.id)
+    if (data === null) continue
+    if (data !== hoje || e.escala[data]?.status === 'trabalho') vencidos.push(a.id)
+  }
+  return vencidos
+}
