@@ -1,4 +1,5 @@
 import type { Estado } from './types'
+import { semUndefined } from './sincronia'
 
 export interface ConfigNuvem {
   apiKey: string
@@ -107,6 +108,8 @@ export function ligadaPeloLink(): boolean {
 interface Ganchos {
   aoReceber: (estado: Estado) => void
   aoMudarStatus: (s: StatusNuvem, detalhe?: string) => void
+  /** Banco ainda sem nada: quem chama decide se publica o estado local. */
+  aoNuvemVazia: () => void
 }
 
 let publicarReal: ((e: Estado) => void) | null = null
@@ -138,11 +141,23 @@ export async function iniciarNuvem(config: ConfigNuvem, ganchos: Ganchos): Promi
         ganchos.aoMudarStatus('ligado')
         const valor = snap.val() as Estado | null
         if (valor && typeof valor.atualizadoEm === 'number') ganchos.aoReceber(valor)
+        else ganchos.aoNuvemVazia()
       },
       (erro) => ganchos.aoMudarStatus('erro', erro.message),
     )
 
-    publicarReal = (estado) => { void bd.set(caminho, estado) }
+    // semUndefined: o RTDB recusa gravar undefined e lanca na hora. try/catch e
+    // catch da promessa porque publicacao que falha nao pode derrubar o app --
+    // tem que virar aviso de erro na tela de Ajustes.
+    publicarReal = (estado) => {
+      try {
+        void bd.set(caminho, semUndefined(estado)).catch((erro: unknown) => {
+          ganchos.aoMudarStatus('erro', erro instanceof Error ? erro.message : String(erro))
+        })
+      } catch (erro) {
+        ganchos.aoMudarStatus('erro', erro instanceof Error ? erro.message : String(erro))
+      }
+    }
     lerAgora = async () => {
       const snap = await bd.get(caminho)
       const valor = snap.val() as Estado | null

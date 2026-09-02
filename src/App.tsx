@@ -3,6 +3,7 @@ import type { Perfil } from './lib/types'
 import { hoje, paraData } from './lib/dates'
 import {
   atualizarDaNuvem, avisarPapaiNaCidade, avisosDe, conectarNuvem, listaDe, naoLidos, useEstado,
+  useStatusNuvem,
 } from './lib/store'
 import { ligadaPeloLink } from './lib/nuvem'
 import { EscalaView } from './views/EscalaView'
@@ -22,6 +23,23 @@ interface PropsApp {
    * E' o que diferencia os links /anne/ e /kelly/ do endereco completo.
    */
   perfilFixo?: Perfil
+}
+
+/**
+ * Aviso curto quando a sincronizacao esta com problema. Sem isso, uma falha de
+ * publicacao ficava invisivel: o app parecia certo e nada chegava no outro
+ * celular. No app da Anne nao ha Ajustes, entao esta e' a unica pista dela.
+ */
+function AvisoDeNuvem({ perfil }: { perfil: Perfil }) {
+  const { status } = useStatusNuvem()
+  if (status !== 'erro') return null
+  return (
+    <div className="sub" style={{ fontWeight: 800 }}>
+      {perfil === 'kelly'
+        ? '⚠️ Sincronização com erro — veja em Ajustes'
+        : '⚠️ Sem conexão com o celular da mamãe'}
+    </div>
+  )
 }
 
 export function App({ perfilFixo }: PropsApp) {
@@ -113,6 +131,7 @@ export function App({ perfilFixo }: PropsApp) {
             <div className="sub">
               {perfil === 'kelly' ? 'Modo mamãe' : 'Oi, Anne! 💜'}
             </div>
+            <AvisoDeNuvem perfil={perfil} />
           </div>
           {!perfilFixo && (
             <div className="perfil-troca">

@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import type { Afazer, Aviso, Estado, ListaDoDia, Perfil, StatusDia, TarefaDoDia } from './types'
 import { brl, chave, curta, hoje, somaDias, paraData } from './dates'
-import { aceitaDaNuvem } from './sincronia'
+import { decidirNuvem } from './sincronia'
 import { deveAvisarPapai, idAvisoPapai, passosFaltando } from './regras'
 import {
   iniciarNuvem, lerConfigNuvem, lerDaNuvemAgora, nuvemAtiva, publicarNaNuvem,
@@ -83,7 +83,14 @@ function migrar(bruto: unknown): Estado {
     // de virar dia do papai sozinha
     comPapaiAutomatico: e.comPapaiAutomatico ?? true,
     afazeres,
-    listas: e.listas ?? {},
+    // O Firebase nao guarda array nem objeto vazio: uma lista sem tarefas volta
+    // de la' SEM a chave `tarefas`, e qualquer `for` nela quebrava a tela -- e
+    // o estado quebrado ainda ia parar no localStorage.
+    listas: Object.fromEntries(
+      Object.entries(e.listas ?? {}).map(([data, lista]) => [
+        data, { ...lista, tarefas: lista?.tarefas ?? [] },
+      ]),
+    ),
     pagamentos: e.pagamentos ?? [],
     avisos: e.avisos ?? [],
     config: { ...base.config, ...(e.config ?? {}) },
@@ -139,8 +146,12 @@ export function alterar(fn: (rascunho: Estado) => void): void {
   rascunho.atualizadoEm = Date.now()
   estado = rascunho
   persistir()
-  publicarNaNuvem(estado)
+  // A tela e' avisada antes de publicar: a mudanca local ja' vale, e falha de
+  // nuvem nao pode impedir a tela de mostrar o que a Kelly acabou de fazer.
   avisarTodos()
+  try {
+    publicarNaNuvem(estado)
+  } catch { /* a nuvem avisa o erro pelo status; o dado local ja' esta salvo */ }
 }
 
 /**
@@ -148,8 +159,15 @@ export function alterar(fn: (rascunho: Estado) => void): void {
  * pendente (o caso comum) ou quando o de la' e' mais novo.
  */
 function receberDaNuvem(remoto: Estado) {
-  if (remoto.atualizadoEm === estado.atualizadoEm) { marcarSincronizado(remoto.atualizadoEm); return }
-  if (!aceitaDaNuvem(remoto.atualizadoEm, estado.atualizadoEm, sincronizadoEm)) return
+  const decisao = decidirNuvem(remoto.atualizadoEm, estado.atualizadoEm, sincronizadoEm)
+  if (decisao === 'igual') { marcarSincronizado(remoto.atualizadoEm); return }
+  if (decisao === 'publicar') {
+    // Este aparelho tem coisa mais nova que a nuvem: em vez de so' ignorar o que
+    // chegou, publica o que ele tem. E' o que faz uma escala colada enquanto a
+    // publicacao estava quebrada finalmente subir, sem a Kelly ter que colar de novo.
+    publicarNaNuvem(estado)
+    return
+  }
   estado = migrar(remoto)
   marcarSincronizado(estado.atualizadoEm)
   persistir()
@@ -169,6 +187,9 @@ export function conectarNuvem(): void {
   if (!config) return
   void iniciarNuvem(config, {
     aoReceber: receberDaNuvem,
+    // Primeira conexao com o banco ainda vazio: sem isso, o que ja' existe neste
+    // aparelho ficaria esperando uma proxima edicao para subir.
+    aoNuvemVazia: () => publicarNaNuvem(estado),
     aoMudarStatus: (s, d) => {
       instantaneoNuvem = { status: s, detalhe: d ?? '' }
       for (const o of ouvintesNuvem) o()
@@ -229,7 +250,11 @@ export function naoLidos(e: Estado, para: Perfil): number {
 export function definirDia(data: string, status: StatusDia | null, nota?: string): void {
   alterar((e) => {
     if (status === null) delete e.escala[data]
-    else e.escala[data] = { status, nota: nota ?? e.escala[data]?.nota }
+    else {
+      const anotacao = nota ?? e.escala[data]?.nota
+      // sem `nota: undefined`: alem de sujeira, o Firebase recusa o estado inteiro
+      e.escala[data] = anotacao ? { status, nota: anotacao } : { status }
+    }
   })
 }
 
@@ -243,7 +268,7 @@ export function aplicarLeitura(
   alterar((e) => {
     for (const [dia, status] of Object.entries(dias)) {
       const k = chave(new Date(ano, mes, Number(dia)))
-      e.escala[k] = { status, nota: notas[dia] }
+      e.escala[k] = notas[dia] ? { status, nota: notas[dia] } : { status }
     }
     for (const dia of limparNaoReconhecidos) {
       const k = chave(new Date(ano, mes, dia))
@@ -366,7 +391,7 @@ export function enviarLista(data: string): void {
   alterar((e) => {
     const lista = garantirLista(e, data)
     lista.enviadaEm = Date.now()
-    lista.vistaEm = undefined
+    delete lista.vistaEm
     e.avisos.unshift({
       id: novoId('av'), para: 'anne', em: Date.now(),
       titulo: 'A mamãe montou uma listinha para você! 💌',
@@ -411,7 +436,7 @@ export function replicarLista(origem: string, ate: string, modo: ModoReplica, en
             feita: false, conferida: false,
             passos: passosNovos(t.passos?.map((p) => p.titulo)),
           })),
-          enviadaEm: enviar ? Date.now() : undefined,
+          ...(enviar ? { enviadaEm: Date.now() } : {}),
         }
         copiados += 1
       }
@@ -457,7 +482,7 @@ export function desfazerTarefa(data: string, id: string): void {
     const t = e.listas[data]?.tarefas.find((x) => x.id === id)
     if (!t || t.conferida) return
     t.feita = false
-    t.feitaEm = undefined
+    delete t.feitaEm
     for (const p of t.passos ?? []) p.feito = false
   })
 }

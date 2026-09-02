@@ -180,6 +180,15 @@ sem sinal, dormiu no bolso, ou você só quer ter certeza:
 **Puxe a tela para baixo**, como no Instagram. Aparece *"Atualizando…"* e o app relê tudo da
 nuvem. Chegar ao fim da rolagem faz a mesma coisa, sozinho.
 
+### Quando a sincronização falha, o app avisa
+
+Se aparecer **⚠️ Sincronização com erro** no topo (no app da Anne, *"Sem conexão com o celular
+da mamãe"*), abra **Ajustes** no app da mamãe: a caixa de status mostra o motivo. Antes isso
+ficava invisível — o app dizia "Sincronizado ✅" mesmo quando nada estava subindo.
+
+Se o motivo falar em **permissão** (`permission_denied`), o problema está nas regras do banco
+no Firebase, não no app.
+
 ## Versão nova do app chega sozinha
 
 Isso é sobre o **app**, não sobre os dados. Quando eu publico uma mudança, os três endereços
