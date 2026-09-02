@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { Afazer, Estado } from '../lib/types'
-import { brl, chave, curta, horaCurta, hoje, porExtenso, somaDias } from '../lib/dates'
+import { brl, chave, curta, horaCurta, hoje, porExtenso, quandoCurto, somaDias } from '../lib/dates'
 import {
   RECADOS_SUGERIDOS, adicionarTarefa, alternarAfazerNaLista, avisosDe, carteira, comPapai,
   conferirTarefa, conferirTudo, definirRecado, enviarLista, listaDe, marcarAvisosLidos, novoId,
@@ -252,7 +252,7 @@ export function KellyView({ estado, ano, mes, aoMudarMes, dia, aoMudarDia }: Pro
             {avisos.slice(0, 12).map((a) => (
               <div className={`aviso-caixa${a.lido ? '' : ' novo'}`} key={a.id}>
                 <div className="t">{a.titulo}</div>
-                <div className="d">{a.texto} • {horaCurta(a.em)}</div>
+                <div className="d">{a.texto} • {quandoCurto(a.em)}</div>
               </div>
             ))}
           </div>

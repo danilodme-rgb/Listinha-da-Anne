@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { Estado, TarefaDoDia } from '../lib/types'
-import { brl, curta, ehHoje, horaCurta, porExtenso } from '../lib/dates'
+import { brl, curta, ehHoje, porExtenso, quandoCurto } from '../lib/dates'
 import {
   alternarPassoTarefa, avisosDe, carteira, comPapai, concluirTarefa, confirmarRecebimento,
   desfazerTarefa, listaDe, marcarAvisosLidos, marcarListaVista,
@@ -242,7 +242,7 @@ export function AnneView({ estado, dia }: Props) {
                 {avisos.slice(0, 8).map((a) => (
                   <div className={`aviso-caixa${a.lido ? '' : ' novo'}`} key={a.id}>
                     <div className="t">{a.titulo}</div>
-                    <div className="d">{a.texto} • {horaCurta(a.em)}</div>
+                    <div className="d">{a.texto} • {quandoCurto(a.em)}</div>
                   </div>
                 ))}
               </div>

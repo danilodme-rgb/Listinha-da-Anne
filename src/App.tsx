@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { Perfil } from './lib/types'
 import { hoje, paraData } from './lib/dates'
 import {
-  atualizarDaNuvem, avisarPapaiNaCidade, avisosDe, conectarNuvem, listaDe, naoLidos, useEstado,
+  atualizarDaNuvem, avisosDe, conectarNuvem, conferirAvisoDoPapai, listaDe, naoLidos, useEstado,
   useStatusNuvem,
 } from './lib/store'
 import { ligadaPeloLink } from './lib/nuvem'
@@ -58,10 +58,11 @@ export function App({ perfilFixo }: PropsApp) {
   const { puxa, rodando } = useAtualizarPuxando(atualizarDaNuvem)
 
   useEffect(() => { conectarNuvem() }, [])
-  // Escala mudou (na mao ou vinda da nuvem)? Confere se hoje e' dia de papai na cidade.
+  // Escala mudou (na mao ou vinda da nuvem)? Confere o aviso do papai: cria o de
+  // hoje e apaga o que a mudanca da escala deixou mentindo.
   // O visibilitychange cobre o celular que fica com o app aberto e vira o dia.
   useEffect(() => {
-    const conferir = () => { if (!document.hidden) avisarPapaiNaCidade() }
+    const conferir = () => { if (!document.hidden) conferirAvisoDoPapai() }
     conferir()
     document.addEventListener('visibilitychange', conferir)
     return () => document.removeEventListener('visibilitychange', conferir)

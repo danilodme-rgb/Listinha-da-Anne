@@ -2,7 +2,7 @@ import { useSyncExternalStore } from 'react'
 import type { Afazer, Aviso, Estado, ListaDoDia, Perfil, StatusDia, TarefaDoDia } from './types'
 import { brl, chave, curta, hoje, somaDias, paraData } from './dates'
 import { decidirNuvem, sincronizadoAposAutomatica } from './sincronia'
-import { deveAvisarPapai, idAvisoPapai, passosFaltando } from './regras'
+import { avisosPapaiVencidos, deveAvisarPapai, idAvisoPapai, passosFaltando } from './regras'
 import {
   iniciarNuvem, lerConfigNuvem, lerDaNuvemAgora, nuvemAtiva, publicarNaNuvem,
   type StatusNuvem,
@@ -569,16 +569,23 @@ export function confirmarRecebimento(): number {
 // ---------------------------------------------------------------- papai na cidade
 
 /**
- * Avisa as duas quando a escala marca folga hoje (Alexandre na cidade).
+ * Confere o aviso "o papai esta na cidade" de hoje: cria quando a escala marca
+ * folga e apaga os que nao valem mais (dia que passou, ou dia que virou
+ * trabalho quando a Kelly mexeu no calendario). Roda a cada mudanca da escala.
+ *
  * O id do aviso e' fixo por dia, entao rodar de novo -- ou o outro celular
  * rodar tambem -- nao duplica nada.
  */
-export function avisarPapaiNaCidade(): void {
+export function conferirAvisoDoPapai(): void {
   const data = hoje()
-  if (!deveAvisarPapai(estado, data)) return
-  // automatica: o app cria esse aviso sozinho ao abrir, antes de a nuvem
-  // responder -- nao pode fazer o aparelho gravar a propria copia por cima.
+  const vencidos = avisosPapaiVencidos(estado, data)
+  const criar = deveAvisarPapai(estado, data)
+  if (!criar && vencidos.length === 0) return
+  // automatica: o app faz isso sozinho ao abrir, antes de a nuvem responder --
+  // nao pode fazer o aparelho gravar a propria copia por cima.
   alterar((e) => {
+    if (vencidos.length > 0) e.avisos = e.avisos.filter((a) => !vencidos.includes(a.id))
+    if (!criar) return
     e.avisos.unshift({
       id: idAvisoPapai(data, 'anne'), para: 'anne', em: Date.now(),
       titulo: 'O papai está na cidade hoje! 👨‍✈️',

@@ -15,7 +15,7 @@ de Stop cobra isso sozinho.
 
 <!-- inicio-geral -->
 
-> **Bloco geral copiado de `instrucoes@3305d0d`.** Não editar aqui: regra nova entra
+> **Bloco geral copiado de `instrucoes@3b4a3b6`.** Não editar aqui: regra nova entra
 > primeiro em `danilodme-rgb/instrucoes` e volta para cá por cópia. Cópia diferente da
 > fonte, atualizo esta antes de trabalhar.
 ## 1. Como responder
@@ -137,6 +137,13 @@ de Stop cobra isso sozinho.
     intermediário legítimo precisa de **nome próprio** — "ok no que rodou" não é "tudo ok",
     "pendente" não é "falhou". E aviso que se repete sem que exista ação possível também morre:
     quem avisa entrega junto a evidência para agir.
+12h. **Regra que cria aviso precisa da regra que o apaga.** Aviso, alerta e etiqueta gerados
+    por regra são cópia de um fato — quando o fato muda, a cópia continua lá dizendo o que
+    era. Toda regra de criação nasce com a de retirada, e ela roda no mesmo gatilho da
+    criação. E texto com "hoje", "agora" ou "novo" **mostra a data quando não é de hoje**:
+    sem o carimbo, o recado de dias atrás se disfarça de recado de agora. Caso real: um app
+    avisava "o pai está na cidade hoje" num dia de folga; a mãe corrigiu o calendário para
+    trabalho e o recado ficou semanas no rodapé, contradizendo a própria tela.
 
 ## 4. Evitar retrabalho
 
@@ -275,6 +282,16 @@ Para não redescobrir a cada sessão.
   valor a pagar; escala com folga do Alexandre → as duas são avisadas de que ele está na
   cidade (id do aviso é fixo por dia, `av_papai_<perfil>_<data>`, senão os dois celulares
   duplicam o recado ao sincronizar).
+- **O aviso do papai também tem de sair sozinho (`conferirAvisoDoPapai` no store,
+  `avisosPapaiVencidos` em `regras.ts`):** o aviso era criado e nunca retirado, então um dia
+  de folga antigo deixava "Alexandre está na cidade **hoje**" parado no fim da tela da Kelly
+  num dia em que ele estava voando — e como o cartão só mostrava a hora (`08:34`), o recado
+  de dias atrás se passava por recado de hoje. Agora a mesma conferida que cria também apaga:
+  aviso de dia que já passou, e aviso de hoje quando a escala virou `trabalho` (Kelly colou
+  outra escala ou corrigiu o dia). Aviso de **hoje sem escala lida não é apagado** de
+  propósito: pode ser só um aparelho que ainda não baixou a escala da nuvem, e apagar ali
+  publicaria a cópia velha dele por cima da boa. Nos cartões de aviso a hora virou
+  `quandoCurto` (`dates.ts`): "ontem 19:34", "28/08 08:34".
 - **Tarefa com perguntinhas:** `Afazer.passos` vira `TarefaDoDia.passos` no dia. A Anne só
   conclui depois de responder todas (é o caso do 🛁 Banho: toalha, coisas, luzes). Kelly
   edita as perguntas em ⚙️ Editar afazeres.
