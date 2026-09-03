@@ -481,5 +481,10 @@ eq('nuvem: mudanca local pendente mas a nuvem e mais nova, aceita',
     quandoCurto(meioDia(somaDias(hoje(), -5))), `${curta(somaDias(hoje(), -5))} 12:34`)
 }
 
+// ---------------------------------------------------------------- PROVA DA TRAVA
+// Falha de proposito. Este branch existe so' para provar que o check obrigatorio
+// reprova e bloqueia o merge -- nao juntar; apagar depois da prova.
+eq('PROVA DA TRAVA: este teste falha de proposito', 1, 2)
+
 console.log(falhas === 0 ? '\nTodos os testes passaram.' : `\n${falhas} teste(s) falharam.`)
 process.exit(falhas === 0 ? 0 : 1)
