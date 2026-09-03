@@ -15,9 +15,11 @@ de Stop cobra isso sozinho.
 
 <!-- inicio-geral -->
 
-> **Bloco geral copiado de `instrucoes@d577651`.** Não editar aqui: regra nova entra
+> **Bloco geral copiado de `instrucoes@9eeeac4`.** Não editar aqui: regra nova entra
 > primeiro em `danilodme-rgb/instrucoes` e volta para cá por cópia. Cópia diferente da
 > fonte, atualizo esta antes de trabalhar.
+
+
 
 
 ## 1. Como responder
@@ -165,6 +167,16 @@ de Stop cobra isso sozinho.
     tarefa. Anoto no arquivo do projeto, no mesmo commit da correção (16c), e a atualização
     das regras acontece na sua própria conversa. A varredura diária lista o que está pendente,
     então nada depende de alguém lembrar.
+16g. **Pendência que nasce de conversa vira issue; todo o resto mora em arquivo.** Arquivo do
+    repositório carrega em toda sessão — é a fonte de regra, de contexto e de armadilha, e
+    **issue não carrega**: eu só a vejo se procurar, então regra em issue é trava desligada
+    (16d). O que só a issue faz é guardar estado próprio entre sessões, aceitar item novo sem
+    sessão aberta e fechar amarrada ao commit. Por isso **decisão pendente (4c) vira issue**,
+    uma por decisão, etiquetada pelo bloco de prazo. A issue rastreia o **estado** e aponta
+    para o texto no repositório, **sem copiá-lo** — texto duplicado vira duas verdades, e
+    ganha a que ninguém atualiza. Fechar a decisão é um gesto só: o commit que a escreve no
+    arquivo (4b) fecha a issue. Lição pendente **não** vira issue: ela já nasce dentro do
+    commit da correção e a varredura já a cobra (16f) — issue ali seria cópia sem dono.
 
 ## 5. Economia de token
 
