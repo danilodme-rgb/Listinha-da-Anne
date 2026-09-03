@@ -15,9 +15,11 @@ de Stop cobra isso sozinho.
 
 <!-- inicio-geral -->
 
-> **Bloco geral copiado de `instrucoes@d577651`.** Não editar aqui: regra nova entra
+> **Bloco geral copiado de `instrucoes@5609d56`.** Não editar aqui: regra nova entra
 > primeiro em `danilodme-rgb/instrucoes` e volta para cá por cópia. Cópia diferente da
 > fonte, atualizo esta antes de trabalhar.
+
+
 
 
 ## 1. Como responder
@@ -65,7 +67,9 @@ de Stop cobra isso sozinho.
 8d. **Passar não prova que detecta falha.** Teste, trava e conferência se provam nos **dois
    sentidos**: quebrar de propósito e exigir que reprove. O que passa tanto na versão certa
    quanto na com defeito não prova nada. Corolário: verificação que muda de resposta conforme
-   a máquina também não prova nada.
+   a máquina também não prova nada. **E prova que morre não reprova — ela some:** conferência
+   que estoura em vez de dizer "reprovei" não deixa o sinal que alguém procura, e passa por
+   cobertura.
 
 ## 3. Excelência no produto
 
@@ -119,7 +123,9 @@ de Stop cobra isso sozinho.
     provar: os três ensinam a pessoa a descontar o sinal, e sinal descontado é sinal morto.
     Estado intermediário legítimo precisa de **nome próprio** — "ok no que rodou" não é "tudo
     ok", "pendente" não é "falhou". Aviso que se repete sem ação possível também morre: quem
-    avisa entrega junto a evidência para agir.
+    avisa entrega junto a evidência para agir. **Estado novo precisa ser ensinado a todas as
+    travas que o observam**, não só a quem o criou: senão a segunda reprova o que a primeira
+    acabou de fazer certo, e o vermelho aparece justamente quando o maquinário funcionou.
 12f. **Dado pessoal entra no desenho no primeiro dia, nunca "a gente vê depois".** Vale mais
     ainda para dado de criança, de saúde e de imagem. Log de erro **jamais** carrega dado
     pessoal. Texto jurídico sai sempre com a ressalva de que precisa de advogado.
@@ -165,6 +171,16 @@ de Stop cobra isso sozinho.
     tarefa. Anoto no arquivo do projeto, no mesmo commit da correção (16c), e a atualização
     das regras acontece na sua própria conversa. A varredura diária lista o que está pendente,
     então nada depende de alguém lembrar.
+16g. **Pendência que nasce de conversa vira issue; todo o resto mora em arquivo.** Arquivo do
+    repositório carrega em toda sessão — é a fonte de regra, de contexto e de armadilha, e
+    **issue não carrega**: eu só a vejo se procurar, então regra em issue é trava desligada
+    (16d). O que só a issue faz é guardar estado próprio entre sessões, aceitar item novo sem
+    sessão aberta e fechar amarrada ao commit. Por isso **decisão pendente (4c) vira issue**,
+    uma por decisão, etiquetada pelo bloco de prazo. A issue rastreia o **estado** e aponta
+    para o texto no repositório, **sem copiá-lo** — texto duplicado vira duas verdades, e
+    ganha a que ninguém atualiza. Fechar a decisão é um gesto só: o commit que a escreve no
+    arquivo (4b) fecha a issue. Lição pendente **não** vira issue: ela já nasce dentro do
+    commit da correção e a varredura já a cobra (16f) — issue ali seria cópia sem dono.
 
 ## 5. Economia de token
 
