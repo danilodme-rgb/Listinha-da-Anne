@@ -378,6 +378,35 @@ Para não redescobrir a cada sessão.
   `reg.installing` — com `skipWaiting` o worker novo quase nunca fica em `waiting`, e o
   navegador pode tê-lo começado antes do nosso `register`, caso em que o `updatefound` nunca
   chega e a tela não recarregaria.
+- **Aviso do celular só sai pelo service worker (`src/lib/avisos-do-celular.ts`):** o app
+  usava `new Notification(...)`, que no **Chrome do Android é construtor ilegal**
+  (`TypeError: Illegal constructor. Use ServiceWorkerRegistration.showNotification()`), e o
+  erro caía num `catch` vazio — permissão concedida, app aberto e **nenhum aviso nunca**, sem
+  sinal nenhum de falha. Agora `mostrarNoCelular` vai primeiro pelo
+  `registration.showNotification` e só cai no construtor como plano B (navegador de
+  computador sem service worker); ela **devolve** `'mostrado' | 'sem-permissao' | 'falhou'`,
+  porque falha de aviso que ninguém vê é falha que ninguém conserta. `scripts/sw.js` trata
+  `notificationclick` (foca ou abre o app **daquele escopo**, nunca o do outro perfil), e os
+  dois apps têm o botão **Testar aviso agora** — o único jeito de provar esse caminho é no
+  aparelho de verdade.
+- **Quem vira notificação se decide por id conhecido, nunca por horário:** o `em` do aviso foi
+  carimbado pelo relógio do **outro** celular. A regra antiga (`aviso.em < montado`) fazia o
+  aparelho com relógio adiantado descartar como "velho" o aviso que tinha acabado de chegar.
+  `avisosANotificar` compara com o conjunto de ids já vistos, ignora aviso lido e tem teto de 3.
+- **Sincronização desligada não pode ser silêncio (`src/lib/conexao.ts` + `components/Conexao.tsx`):**
+  sem configuração, `conectarNuvem` voltava sem fazer nada e nenhuma tela dizia nada — no app
+  da Anne, que não tem Ajustes, isso era exatamente "a mamãe mandou e não chegou". Agora o
+  store publica um instantâneo (`useSincronizacao`: configurada, status, `respondeuEm`,
+  `pendenteDesde`) e `resumoConexao` traduz cada estado com nome próprio e próximo passo.
+  Duas travas no teste: nenhum estado ruim pode devolver tom `'ok'`, e todo estado ruim
+  explica o que fazer. `atualizarDaNuvem` passou a devolver `'novidade' | 'em-dia' | 'erro' | …`
+  para o botão "Procurar novidades" poder dizer o que aconteceu.
+- **`lerConfigNuvem` agora roda dentro de `alterar`** (para saber se há nuvem configurada), e
+  por isso não pode lançar: `import.meta.env` **não existe** fora do Vite (o bundle dos testes),
+  e o `import.meta.env.VITE_…` direto derrubava toda gravação. Lê com `?? {}`.
+- **A tela da Anne mostra só o dia de hoje** — montar listinha com o calendário da Kelly em
+  outro dia é montar para ninguém ver. `KellyView` avisa em amarelo quando `dia !== hoje()`,
+  com o botão "Ir para a listinha de hoje", e o alerta do envio diz para que dia foi.
 - **Arquivos-chave:** `src/lib/parser.ts` (leitor da escala), `src/lib/store.ts` (estado e
   ações), `src/views/` (uma tela por aba).
 - **Documentação para o usuário:** `COMO-USAR.md` — atualizar quando algo mudar para ele.

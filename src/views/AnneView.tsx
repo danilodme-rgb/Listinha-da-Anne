@@ -3,10 +3,13 @@ import type { Estado, TarefaDoDia } from '../lib/types'
 import { brl, curta, ehHoje, porExtenso, quandoCurto } from '../lib/dates'
 import {
   alternarPassoTarefa, avisosDe, carteira, comPapai, concluirTarefa, confirmarRecebimento,
-  desfazerTarefa, listaDe, marcarAvisosLidos, marcarListaVista,
+  desfazerTarefa, listaDe, marcarAvisosLidos, marcarListaVista, useSincronizacao,
 } from '../lib/store'
+import { resumoConexao } from '../lib/conexao'
 import { passosFaltando } from '../lib/regras'
 import { Festa } from '../components/Festa'
+import { CartaoConexao } from '../components/Conexao'
+import { CartaoAvisosDoCelular } from '../components/AvisosDoCelular'
 import { BannerFotos, GaleriaFotos } from '../components/Fotos'
 import { Modal } from '../components/Modal'
 
@@ -27,6 +30,10 @@ export function AnneView({ estado, dia }: Props) {
   const [perguntando, setPerguntando] = useState<string | null>(null)
 
   const lista = listaDe(estado, dia)
+  const sinc = useSincronizacao()
+  // Conexao ruim sobe para o topo: e' a explicacao de "a mamae mandou e nao
+  // chegou nada". Boa, fica la' embaixo, sem roubar a tela da listinha.
+  const conexaoOk = resumoConexao({ ...sinc, agora: Date.now() }, 'anne').tom === 'ok'
   const c = carteira(estado)
   const avisos = avisosDe(estado, 'anne')
   const foraDeCasa = comPapai(estado, dia)
@@ -69,6 +76,8 @@ export function AnneView({ estado, dia }: Props) {
       {festa && <Festa titulo={festa.titulo} detalhe={festa.detalhe} aoFechar={() => setFesta(null)} />}
 
       <BannerFotos />
+
+      {!conexaoOk && <CartaoConexao perfil="anne" />}
 
       {temNovidade && (
         <div className="convite">
@@ -249,24 +258,9 @@ export function AnneView({ estado, dia }: Props) {
             </div>
           )}
 
-          <div className="cartao">
-            <h2>🔔 Avisos no celular</h2>
-            <p className="ajuda">
-              Ligue para o celular te avisar quando a mamãe mandar listinha nova
-              e quando ela conferir as suas tarefas.
-            </p>
-            <button
-              className="btn grande"
-              onClick={() => {
-                if (!('Notification' in window)) { alert('Esse celular não faz avisos.'); return }
-                void Notification.requestPermission().then((p) => {
-                  alert(p === 'granted' ? 'Prontinho! Agora eu te aviso. 🔔' : 'Os avisos não foram permitidos.')
-                })
-              }}
-            >
-              Quero receber avisos
-            </button>
-          </div>
+          {conexaoOk && <CartaoConexao perfil="anne" />}
+
+          <CartaoAvisosDoCelular perfil="anne" />
         </>
       )}
     </>

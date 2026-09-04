@@ -75,6 +75,21 @@ self.addEventListener('message', (evento) => {
   }
 })
 
+// Tocar no aviso abre (ou traz para a frente) o app deste escopo -- /anne/ ou
+// /kelly/, nunca o do outro perfil. Sem isso o aviso aparece e nao leva a lugar
+// nenhum, e no Android ele nem sequer some da barra ao ser tocado.
+self.addEventListener('notificationclick', (evento) => {
+  evento.notification.close()
+  evento.waitUntil((async () => {
+    const alvo = new URL(self.registration.scope).href
+    const janelas = await self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+    for (const janela of janelas) {
+      if (janela.url.startsWith(alvo) && 'focus' in janela) return janela.focus()
+    }
+    return self.clients.openWindow(alvo)
+  })())
+})
+
 // Network-first: sempre tenta a rede e guarda uma copia para quando faltar internet.
 self.addEventListener('fetch', (evento) => {
   const req = evento.request

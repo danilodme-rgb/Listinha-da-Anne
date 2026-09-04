@@ -126,8 +126,46 @@ function marcarSincronizado(quando: number) {
 }
 
 const ouvintes = new Set<() => void>()
-let instantaneoNuvem: { status: StatusNuvem; detalhe: string } = { status: 'desligado', detalhe: '' }
 const ouvintesNuvem = new Set<() => void>()
+
+/**
+ * Tudo que a tela precisa para dizer, sem mentir, como esta a sincronizacao.
+ * Antes so' havia `status`, e o caso mais comum de "nao chega nada" -- aparelho
+ * sem configuracao nenhuma -- ficava com status 'desligado' e nenhum texto na
+ * tela. Veja `resumoConexao` em conexao.ts.
+ */
+export interface Sincronizacao {
+  configurada: boolean
+  status: StatusNuvem
+  detalhe: string
+  /** Ultima vez que a nuvem respondeu (relogio deste aparelho). */
+  respondeuEm: number | null
+  /** Desde quando ha' mudanca local esperando subir; null quando esta em dia. */
+  pendenteDesde: number | null
+}
+
+let instantaneoNuvem: Sincronizacao = {
+  configurada: false, status: 'desligado', detalhe: '', respondeuEm: null, pendenteDesde: null,
+}
+
+/**
+ * Remonta o instantaneo e avisa a tela **so' quando algo mudou de verdade** --
+ * `useSyncExternalStore` entra em laco infinito se o snapshot vier num objeto
+ * novo a cada leitura.
+ */
+function recalcularSincronizacao(parcial: Partial<Sincronizacao> = {}) {
+  const novo: Sincronizacao = {
+    ...instantaneoNuvem,
+    configurada: lerConfigNuvem() !== null,
+    pendenteDesde: estado.atualizadoEm > sincronizadoEm ? estado.atualizadoEm : null,
+    ...parcial,
+  }
+  const igual = (Object.keys(novo) as Array<keyof Sincronizacao>)
+    .every((k) => novo[k] === instantaneoNuvem[k])
+  if (igual) return
+  instantaneoNuvem = novo
+  for (const o of ouvintesNuvem) o()
+}
 
 function avisarTodos() {
   for (const o of ouvintes) o()
@@ -159,6 +197,7 @@ export function alterar(fn: (rascunho: Estado) => void, automatica = false): voi
   // A tela e' avisada antes de publicar: a mudanca local ja' vale, e falha de
   // nuvem nao pode impedir a tela de mostrar o que a Kelly acabou de fazer.
   avisarTodos()
+  recalcularSincronizacao()
   try {
     publicarNaNuvem(estado)
   } catch { /* a nuvem avisa o erro pelo status; o dado local ja' esta salvo */ }
@@ -170,40 +209,65 @@ export function alterar(fn: (rascunho: Estado) => void, automatica = false): voi
  */
 function receberDaNuvem(remoto: Estado) {
   const decisao = decidirNuvem(remoto.atualizadoEm, estado.atualizadoEm, sincronizadoEm)
-  if (decisao === 'igual') { marcarSincronizado(remoto.atualizadoEm); return }
+  const respondeuEm = Date.now()
+  if (decisao === 'igual') {
+    marcarSincronizado(remoto.atualizadoEm)
+    recalcularSincronizacao({ respondeuEm })
+    return
+  }
   if (decisao === 'publicar') {
     // Este aparelho tem coisa mais nova que a nuvem: em vez de so' ignorar o que
     // chegou, publica o que ele tem. E' o que faz uma escala colada enquanto a
     // publicacao estava quebrada finalmente subir, sem a Kelly ter que colar de novo.
     publicarNaNuvem(estado)
+    recalcularSincronizacao({ respondeuEm })
     return
   }
   estado = migrar(remoto)
   marcarSincronizado(estado.atualizadoEm)
   persistir()
   avisarTodos()
+  recalcularSincronizacao({ respondeuEm })
 }
 
-/** Rele' a nuvem agora. E' o que o puxar-para-atualizar chama. */
-export async function atualizarDaNuvem(): Promise<void> {
-  if (!lerConfigNuvem()) return
-  if (!nuvemAtiva()) { conectarNuvem(); return }
-  const remoto = await lerDaNuvemAgora()
-  if (remoto) receberDaNuvem(remoto)
+export type ResultadoAtualizar = 'nao-configurada' | 'conectando' | 'novidade' | 'em-dia' | 'erro'
+
+/**
+ * Rele' a nuvem agora. E' o que o puxar-para-atualizar e o botao "Procurar
+ * novidades" chamam. Devolve o que aconteceu: quem pediu precisa poder dizer na
+ * tela se veio novidade, se ja' estava em dia ou se falhou -- botao que faz
+ * tudo em silencio nao se distingue de botao quebrado.
+ */
+export async function atualizarDaNuvem(): Promise<ResultadoAtualizar> {
+  if (!lerConfigNuvem()) { recalcularSincronizacao(); return 'nao-configurada' }
+  if (!nuvemAtiva()) { conectarNuvem(); return 'conectando' }
+  try {
+    const remoto = await lerDaNuvemAgora()
+    if (!remoto) return 'em-dia'
+    const antes = estado.atualizadoEm
+    receberDaNuvem(remoto)
+    return estado.atualizadoEm === antes ? 'em-dia' : 'novidade'
+  } catch (erro) {
+    recalcularSincronizacao({
+      status: 'erro', detalhe: erro instanceof Error ? erro.message : String(erro),
+    })
+    return 'erro'
+  }
 }
 
 export function conectarNuvem(): void {
   const config = lerConfigNuvem()
+  // Sem configuracao nao ha' o que conectar -- mas o instantaneo tem de dizer
+  // isso para a tela, senao o aparelho fica em silencio esperando uma listinha
+  // que nunca vai chegar.
+  recalcularSincronizacao()
   if (!config) return
   void iniciarNuvem(config, {
     aoReceber: receberDaNuvem,
     // Primeira conexao com o banco ainda vazio: sem isso, o que ja' existe neste
     // aparelho ficaria esperando uma proxima edicao para subir.
     aoNuvemVazia: () => publicarNaNuvem(estado),
-    aoMudarStatus: (s, d) => {
-      instantaneoNuvem = { status: s, detalhe: d ?? '' }
-      for (const o of ouvintesNuvem) o()
-    },
+    aoMudarStatus: (s, d) => recalcularSincronizacao({ status: s, detalhe: d ?? '' }),
   })
 }
 
@@ -214,11 +278,17 @@ export function useEstado(): Estado {
   )
 }
 
-export function useStatusNuvem(): { status: StatusNuvem; detalhe: string } {
+export function useSincronizacao(): Sincronizacao {
   return useSyncExternalStore(
     (cb) => { ouvintesNuvem.add(cb); return () => ouvintesNuvem.delete(cb) },
     () => instantaneoNuvem,
   )
+}
+
+/** Leitura direta, para teste e para quem nao e' componente. */
+export function sincronizacaoAgora(): Sincronizacao {
+  recalcularSincronizacao()
+  return instantaneoNuvem
 }
 
 export function exportarEstado(): Estado {

@@ -16,7 +16,10 @@ export type StatusNuvem = 'desligado' | 'conectando' | 'ligado' | 'erro'
 const CHAVE = 'listinha-da-anne/nuvem'
 
 const doAmbiente = (): ConfigNuvem | null => {
-  const e = import.meta.env
+  // `import.meta.env` some fora do Vite (o bundle dos testes, por exemplo).
+  // Ler a configuracao nunca pode lancar: quem chama e' `alterar`, e uma
+  // excecao ali derruba a gravacao de tudo.
+  const e = (import.meta.env ?? {}) as Record<string, string | undefined>
   if (!e.VITE_FB_API_KEY || !e.VITE_FB_DATABASE_URL) return null
   return {
     apiKey: e.VITE_FB_API_KEY,

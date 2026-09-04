@@ -98,6 +98,20 @@ export function KellyView({ estado, ano, mes, aoMudarMes, dia, aoMudarDia }: Pro
           )}
         </div>
 
+        {/* A tela da Anne mostra so' o dia de hoje. Montar sem perceber que o
+            calendario estava em outro dia era montar para ninguem ver. */}
+        {dia !== hoje() && (
+          <div className="alerta-leitura" style={{ marginTop: 8 }}>
+            <b>Atenção:</b> esta listinha é de {curta(dia)}, não de hoje ({curta(hoje())}).
+            A Anne vê só a de hoje — ela vai aparecer para ela quando chegar o dia.
+            <div style={{ marginTop: 8 }}>
+              <button className="btn pequeno contorno" onClick={() => aoMudarDia(hoje())}>
+                Ir para a listinha de hoje
+              </button>
+            </div>
+          </div>
+        )}
+
         {foraDeCasa && (
           <div className="alerta-leitura" style={{ marginTop: 8 }}>
             👨 Nesse dia a Anne está com o papai — normalmente não tem tarefa em casa.
@@ -199,7 +213,12 @@ export function KellyView({ estado, ano, mes, aoMudarMes, dia, aoMudarDia }: Pro
           <button
             className="btn primario grande"
             disabled={lista.tarefas.length === 0}
-            onClick={() => { enviarLista(dia); alert('Listinha enviada! A Anne vai ver o aviso na aba dela. 💌') }}
+            onClick={() => {
+              enviarLista(dia)
+              alert(dia === hoje()
+                ? 'Listinha enviada! A Anne vai ver o aviso na aba dela. 💌'
+                : `Listinha de ${curta(dia)} enviada! Ela aparece para a Anne quando chegar esse dia. 💌`)
+            }}
           >
             {lista.enviadaEm ? '🔁 Enviar de novo para a Anne' : '💌 Enviar para a Anne'}
           </button>
