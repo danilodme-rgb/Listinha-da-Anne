@@ -1,7 +1,11 @@
 import { useState } from 'react'
 import type { Estado } from '../lib/types'
 import { alterar, exportarEstado, importarEstado, useSincronizacao } from '../lib/store'
-import { interpretarConfig, lerConfigNuvem, linkDeSincronizacao, salvarConfigNuvem } from '../lib/nuvem'
+import {
+  familiaMudou, interpretarConfig, lerConfigNuvem, linkDeSincronizacao, normalizarFamilia,
+  salvarConfigNuvem,
+} from '../lib/nuvem'
+import { traduzirErroNuvem } from '../lib/conexao'
 import { GaleriaFotos } from '../components/Fotos'
 import { CartaoAvisosDoCelular } from '../components/AvisosDoCelular'
 import { procurarAtualizacao, versaoDoApp } from '../lib/atualizacao'
@@ -58,7 +62,7 @@ export function AjustesView({ estado }: { estado: Estado }) {
         <div className="alerta-leitura" style={{ background: status === 'ligado' ? '#dcfce7' : '#fef3c7', color: status === 'ligado' ? '#14532d' : '#92400e' }}>
           <b>{RECADO_STATUS[status]}</b>
           {config && <> • código da família: <b>{config.familia}</b></>}
-          {detalhe && <div style={{ marginTop: 4, fontWeight: 600 }}>{detalhe}</div>}
+          {detalhe && <div style={{ marginTop: 4, fontWeight: 600 }}>{traduzirErroNuvem(detalhe)}</div>}
         </div>
 
         <label className="rotulo" style={{ marginTop: 14 }} htmlFor="aj-familia">Código da família</label>
@@ -69,6 +73,11 @@ export function AjustesView({ estado }: { estado: Estado }) {
           value={familia}
           onChange={(e) => setFamilia(e.target.value)}
         />
+        <p className="ajuda" style={{ marginTop: 6 }}>
+          {familiaMudou(familia)
+            ? <>Só letras, números e hífen — vou salvar como <b>{normalizarFamilia(familia)}</b>.</>
+            : 'Só letras, números e hífen. Os dois celulares precisam usar exatamente o mesmo código.'}
+        </p>
 
         {config && (
           <p className="ajuda" style={{ marginTop: 12 }}>
@@ -98,7 +107,7 @@ export function AjustesView({ estado }: { estado: Estado }) {
             onClick={() => {
               const c = texto.trim()
                 ? interpretarConfig(texto, familia)
-                : config && { ...config, familia: familia.trim() || config.familia }
+                : config && { ...config, familia: familia.trim() ? normalizarFamilia(familia) : config.familia }
               if (!c) {
                 alert(config
                   ? 'Não achei apiKey e databaseURL neste texto.'

@@ -39,6 +39,28 @@ export function lerConfigNuvem(): ConfigNuvem | null {
   return doAmbiente()
 }
 
+/**
+ * O codigo da familia vira **pedaco do caminho no banco** (`familias/<codigo>/estado`),
+ * e o Realtime Database recusa caminho com `.`, `#`, `$`, `[`, `]` ou `/` -- recusa
+ * **lancando** dentro de `ref()`, o que aparecia como um "erro ao conectar" sem nenhuma
+ * pista de que o problema era o que a pessoa digitou. Entao o codigo e' saneado na
+ * entrada: o que sai daqui sempre serve como chave.
+ */
+export function normalizarFamilia(bruto: string): string {
+  const limpo = bruto
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // tira acento
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')                      // espaco, ponto, barra, emoji…
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60)
+  return limpo || 'familia'
+}
+
+/** O que a pessoa digitou vai ser mudado? Serve para avisar antes de salvar. */
+export function familiaMudou(bruto: string): boolean {
+  return bruto.trim() !== '' && normalizarFamilia(bruto) !== bruto.trim()
+}
+
 export function salvarConfigNuvem(c: ConfigNuvem | null): void {
   if (c) localStorage.setItem(CHAVE, JSON.stringify(c))
   else localStorage.removeItem(CHAVE)
@@ -61,7 +83,7 @@ export function interpretarConfig(texto: string, familia: string): ConfigNuvem |
     databaseURL,
     projectId,
     appId: pega('appId'),
-    familia: familia.trim() || 'familia',
+    familia: normalizarFamilia(familia),
   }
 }
 
@@ -104,6 +126,25 @@ export function aplicarLinkDeSincronizacao(): void {
 
 export function ligadaPeloLink(): boolean {
   return veioDeLink
+}
+
+/**
+ * O link `#sync=` tambem tem de valer com o app **ja aberto**.
+ *
+ * Trocar so' o `#` de um endereco que ja' esta na tela **nao recarrega a pagina** -- e
+ * `aplicarLinkDeSincronizacao` so' roda ao subir o app. Resultado: colar o link no
+ * celular da Anne com o app aberto nao ligava nada, e a tela seguia dizendo "ainda nao
+ * estou ligada", como se o link estivesse errado.
+ */
+export function vigiarLinkDeSincronizacao(): void {
+  window.addEventListener('hashchange', () => {
+    if (!location.hash.startsWith('#sync=')) return
+    const antes = JSON.stringify(lerConfigNuvem())
+    aplicarLinkDeSincronizacao()
+    // recarrega so' quando a configuracao mudou de verdade: conectar exige subir
+    // o app com ela, e recarregar a' toa e' susto sem motivo.
+    if (JSON.stringify(lerConfigNuvem()) !== antes) location.reload()
+  })
 }
 
 // ------------------------------------------------------------ conexao

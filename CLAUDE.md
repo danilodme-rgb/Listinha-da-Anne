@@ -407,6 +407,23 @@ Para não redescobrir a cada sessão.
 - **A tela da Anne mostra só o dia de hoje** — montar listinha com o calendário da Kelly em
   outro dia é montar para ninguém ver. `KellyView` avisa em amarelo quando `dia !== hoje()`,
   com o botão "Ir para a listinha de hoje", e o alerta do envio diz para que dia foi.
+- **O código da família vira pedaço do caminho no banco** (`familias/<codigo>/estado`). O
+  Realtime Database recusa `.`, `#`, `$`, `[`, `]` e `/` numa chave, e recusa **lançando
+  dentro de `ref()`** — aparecia como "erro ao conectar" sem nenhuma pista de que o problema
+  era o que a pessoa digitou. `normalizarFamilia` saneia na entrada (acento, espaço e
+  proibido viram `-`; vazio vira `familia`), e Ajustes mostra antes o código que vai salvar.
+  Sanear **só na entrada**, nunca ao montar o caminho: mudar o caminho de um aparelho já
+  configurado o separaria do outro sem ninguém perceber.
+- **Erro do Firebase se traduz antes de chegar na tela (`traduzirErroNuvem`):**
+  `auth/configuration-not-found` (login anônimo desativado), `permission_denied` (regras do
+  banco), `api-key-not-valid`, path inválido e falta de `databaseURL` têm consertos
+  diferentes, em telas diferentes do console. Erro desconhecido continua aparecendo cru — na
+  dúvida, melhor o texto do SDK do que nada.
+- **`#sync=` também vale com o app já aberto (`vigiarLinkDeSincronizacao`):** trocar só o
+  `#` de um endereço que já está na tela **não recarrega a página**, e `aplicarLinkDeSincronizacao`
+  só rodava ao subir o app. Colar o link no celular da Anne com o app aberto não ligava nada
+  e a tela seguia dizendo "ainda não estou ligada", como se o link estivesse errado. Agora um
+  `hashchange` aplica e recarrega — e só recarrega quando a configuração mudou de verdade.
 - **Arquivos-chave:** `src/lib/parser.ts` (leitor da escala), `src/lib/store.ts` (estado e
   ações), `src/views/` (uma tela por aba).
 - **Documentação para o usuário:** `COMO-USAR.md` — atualizar quando algo mudar para ele.

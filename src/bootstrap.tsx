@@ -2,7 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './App'
 import type { Perfil } from './lib/types'
-import { aplicarLinkDeSincronizacao } from './lib/nuvem'
+import { aplicarLinkDeSincronizacao, vigiarLinkDeSincronizacao } from './lib/nuvem'
 import { vigiarAtualizacoes } from './lib/atualizacao'
 import './styles.css'
 
@@ -10,6 +10,8 @@ import './styles.css'
 export function iniciar(perfilFixo?: Perfil): void {
   // um link com #sync= liga a sincronizacao antes do app subir
   aplicarLinkDeSincronizacao()
+  // e tambem quando o link e' colado com o app ja aberto (trocar o # nao recarrega)
+  vigiarLinkDeSincronizacao()
 
   createRoot(document.getElementById('root')!).render(
     <StrictMode>

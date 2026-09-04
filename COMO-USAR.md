@@ -107,7 +107,10 @@ Anne. A sincronização é gratuita e usa o Firebase do Google.
    **Copie esse bloco inteiro.**
 6. No app (link da Kelly), entre em **Ajustes → Sincronizar entre celulares**:
    - em *Código da família*, invente um código difícil de adivinhar,
-     ex.: `anne-kelly-8f3k9`;
+     ex.: `anne-kelly-8f3k9` — **só letras, números e hífen**. Esse código vira parte do
+     endereço dos dados no banco, e o Firebase recusa ponto, barra, `#`, `$` e colchete; o
+     app corrige sozinho e mostra embaixo do campo o código que vai salvar. Os dois
+     celulares precisam ficar com **exatamente** o mesmo código;
    - cole o bloco copiado no campo de configuração;
    - toque em **Ligar sincronização**. O app recarrega.
 
@@ -121,6 +124,7 @@ Anne. A sincronização é gratuita e usa o Firebase do Google.
    - toque em **Copiar link** e mande para o celular da Anne (WhatsApp serve);
    - **no celular dela**, abra o link uma vez. Aparece *"☁️ Sincronização ligada!"* — pronto,
      não precisa fazer mais nada. Depois disso ela usa o app pelo ícone, normalmente.
+     Funciona com o app dela já aberto: colando o link, ele recarrega sozinho e liga.
 
    > Esse link carrega a chave do seu Firebase. Mande só para os celulares da família.
 
@@ -128,6 +132,17 @@ Pronto: o que a Kelly monta aparece na Anne, e o que a Anne conclui volta para a
 
 > Se o `databaseURL` não aparecer no bloco copiado, o app monta o endereço a partir do
 > `projectId` — mas confira no Realtime Database se bate.
+
+### Deu erro na hora de conectar?
+
+A caixa de status em Ajustes mostra o motivo já traduzido. Os quatro mais comuns:
+
+| O que aparece | Onde consertar |
+| --- | --- |
+| *O login anônimo não está ativado* | Console → **Authentication → Sign-in method → Anônimo → Ativar** (passo 4 acima) |
+| *As regras do banco estão barrando* | Console → **Realtime Database → Regras**: cole as regras do passo 3 e **Publique** |
+| *A apiKey não vale para esse projeto* | Copie o bloco de configuração de novo (passo 5) e cole em Ajustes |
+| *O código da família tem caractere que o banco não aceita* | Use só letras, números e hífen — o app mostra embaixo do campo o código que vai salvar |
 
 ## Passo 5 · Colocar as fotos preferidas da Anne
 
