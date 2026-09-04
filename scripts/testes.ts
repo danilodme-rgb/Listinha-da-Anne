@@ -16,7 +16,8 @@ import {
 import { emCasaNoMes, emCasaPorMes, emCasaTotal } from '../src/lib/relatorio'
 import { deveRecarregar, podeProcurar } from '../src/lib/atualizacao'
 import { avisosANotificar, textoDaPermissao } from '../src/lib/avisos-do-celular'
-import { resumoConexao, type EstadoConexao } from '../src/lib/conexao'
+import { resumoConexao, traduzirErroNuvem, type EstadoConexao } from '../src/lib/conexao'
+import { familiaMudou, normalizarFamilia } from '../src/lib/nuvem'
 import { escaparPdf, montarPdf, paraWinAnsi, quebrarTexto } from '../src/lib/pdf'
 import { linhasDoRelatorio } from '../src/lib/relatorio'
 import type { Estado, TarefaDoDia } from '../src/lib/types'
@@ -552,6 +553,47 @@ eq('nuvem: mudanca local pendente mas a nuvem e mais nova, aceita',
     ruins.filter((x) => r(x).texto.length < 20).length, 0)
   eq('a Kelly ve o caminho dela (Ajustes)',
     resumoConexao({ ...base, configurada: false }, 'kelly').acao, 'abrir-ajustes')
+}
+
+// ---------------------------------------------------------------- codigo da familia
+// Ele vira pedaco do caminho no banco. Caractere proibido faz o `ref()` LANCAR, e
+// isso aparecia como "erro ao conectar" sem dizer que o problema era o que se digitou.
+{
+  eq('espaco vira hifen', normalizarFamilia('anne kelly 2026'), 'anne-kelly-2026')
+  eq('ponto e barra saem', normalizarFamilia('anne.kelly/2026'), 'anne-kelly-2026')
+  eq('acento e maiuscula saem', normalizarFamilia('Família Ávila'), 'familia-avila')
+  eq('cifrao, cerquilha e colchete saem', normalizarFamilia('a$b#c[d]'), 'a-b-c-d')
+  eq('so caractere proibido nao vira codigo vazio', normalizarFamilia('...'), 'familia')
+  eq('codigo bom passa intacto', normalizarFamilia('anne-kelly-8f3k9'), 'anne-kelly-8f3k9')
+  eq('o app avisa quando vai mudar o que foi digitado', familiaMudou('anne kelly'), true)
+  eq('codigo ja bom nao gera aviso a toa', familiaMudou('anne-kelly-8f3k9'), false)
+
+  // Prova no sentido inverso: nada que sai daqui pode conter o que o banco recusa.
+  const proibidos = ['.', '#', '$', '[', ']', '/']
+  const entradas = ['anne kelly', 'Família.Ávila', 'a/b', 'a#b', '  ', 'x'.repeat(200), '🌟anne']
+  eq('nenhum codigo saneado contem caractere proibido',
+    entradas.filter((x) => proibidos.some((c) => normalizarFamilia(x).includes(c))).length, 0)
+  eq('nenhum codigo saneado sai vazio',
+    entradas.filter((x) => normalizarFamilia(x).length === 0).length, 0)
+}
+
+// ---------------------------------------------------------------- erro do Firebase em portugues
+{
+  const diz = (bruto: string, trecho: string) =>
+    eq(`erro "${bruto}" aponta o conserto`, traduzirErroNuvem(bruto).includes(trecho), true)
+
+  diz('Firebase: Error (auth/configuration-not-found).', 'Anônimo')
+  diz('auth/api-key-not-valid.-please-pass-a-valid-api-key.', 'apiKey')
+  diz('PERMISSION_DENIED: Permission denied', 'Regras')
+  diz("Invalid Firebase Database path: familias/a b. Paths can't contain \".\"", 'código da família')
+  diz("Can't determine Firebase Database URL.", 'databaseURL')
+
+  // Erro desconhecido nao pode sumir: melhor o texto cru do que nada na tela.
+  eq('erro desconhecido chega inteiro na tela',
+    traduzirErroNuvem('boom inesperado 42'), 'boom inesperado 42')
+  eq('nenhuma traducao sai vazia',
+    ['auth/configuration-not-found', 'PERMISSION_DENIED', 'network error', 'x']
+      .filter((x) => traduzirErroNuvem(x).trim().length === 0).length, 0)
 }
 
 console.log(falhas === 0 ? '\nTodos os testes passaram.' : `\n${falhas} teste(s) falharam.`)

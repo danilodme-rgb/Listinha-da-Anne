@@ -34,6 +34,40 @@ export interface EstadoConexao {
   agora: number
 }
 
+/**
+ * Erro do Firebase traduzido para o que a pessoa tem de fazer.
+ *
+ * O SDK devolve coisas como `auth/configuration-not-found` e `PERMISSION_DENIED`, que
+ * nao dizem nada para quem so' quer a listinha funcionando -- e cada uma tem um conserto
+ * diferente, em telas diferentes do console do Firebase. Mensagem que nao aponta o
+ * conserto vira "deu erro" e para por ai.
+ */
+export function traduzirErroNuvem(bruto: string): string {
+  const m = bruto.toLowerCase()
+  if (m.includes('configuration-not-found') || m.includes('operation-not-allowed')) {
+    return 'O login anônimo não está ativado no Firebase. Console → Authentication → Sign-in method → Anônimo → Ativar.'
+  }
+  if (m.includes('api-key-not-valid') || m.includes('invalid-api-key')) {
+    return 'A apiKey não vale para esse projeto. Copie o bloco de configuração de novo em Configurações do projeto → Seus apps.'
+  }
+  if (m.includes('permission_denied') || m.includes('permission denied')) {
+    return 'As regras do banco estão barrando a gravação. Console → Realtime Database → Regras: cole as regras do COMO-USAR e publique.'
+  }
+  if (m.includes('invalid firebase database path') || m.includes("can't contain")) {
+    return 'O código da família tem caractere que o banco não aceita. Use só letras, números e hífen (ex.: anne-kelly-2026).'
+  }
+  if (m.includes('determine firebase database url') || m.includes('databaseurl') || m.includes('database url')) {
+    return 'Falta o endereço do banco (databaseURL). Crie o Realtime Database no console e copie o bloco de configuração de novo.'
+  }
+  if (m.includes('network') || m.includes('unavailable') || m.includes('offline')) {
+    return 'Sem conexão com o banco agora. Confira a internet deste aparelho e tente de novo.'
+  }
+  if (m.includes('project') && m.includes('not') && m.includes('found')) {
+    return 'O projeto do Firebase não foi encontrado. Confira se o projeto ainda existe e copie a configuração de novo.'
+  }
+  return bruto
+}
+
 /** Mudanca local demora milissegundos para subir: so' vira aviso se emperrar. */
 const PENDENCIA_LENTA = 60_000
 
@@ -55,7 +89,7 @@ export function resumoConexao(e: EstadoConexao, perfil: Perfil): ResumoConexao {
       titulo: anne ? '⚠️ Não estou conseguindo falar com o celular da mamãe' : '⚠️ Erro na sincronização',
       texto: anne
         ? 'Confira a internet e toque em "Procurar novidades". Se continuar assim, avise a mamãe.'
-        : `Confira a internet e os dados em Ajustes.${e.detalhe ? ` Detalhe: ${e.detalhe}` : ''}`,
+        : e.detalhe ? traduzirErroNuvem(e.detalhe) : 'Confira a internet e os dados em Ajustes.',
       acao: 'procurar',
     }
   }
