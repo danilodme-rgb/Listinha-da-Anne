@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import type { Estado } from '../lib/types'
-import { alterar, exportarEstado, importarEstado, useStatusNuvem } from '../lib/store'
+import { alterar, exportarEstado, importarEstado, useSincronizacao } from '../lib/store'
 import { interpretarConfig, lerConfigNuvem, linkDeSincronizacao, salvarConfigNuvem } from '../lib/nuvem'
 import { GaleriaFotos } from '../components/Fotos'
+import { CartaoAvisosDoCelular } from '../components/AvisosDoCelular'
 import { procurarAtualizacao, versaoDoApp } from '../lib/atualizacao'
 
 const RECADO_STATUS: Record<string, string> = {
@@ -13,7 +14,7 @@ const RECADO_STATUS: Record<string, string> = {
 }
 
 export function AjustesView({ estado }: { estado: Estado }) {
-  const { status, detalhe } = useStatusNuvem()
+  const { status, detalhe } = useSincronizacao()
   const config = lerConfigNuvem()
   const [texto, setTexto] = useState('')
   const [familia, setFamilia] = useState(config?.familia ?? '')
@@ -215,24 +216,7 @@ export function AjustesView({ estado }: { estado: Estado }) {
         </div>
       </div>
 
-      <div className="cartao">
-        <h2>🔔 Avisos do celular</h2>
-        <p className="ajuda">
-          Com a permissão ligada, o celular avisa quando a Anne concluir uma tarefa
-          (e quando a mamãe mandar listinha nova), desde que o app esteja aberto ou em segundo plano.
-        </p>
-        <button
-          className="btn grande"
-          onClick={() => {
-            if (!('Notification' in window)) { alert('Esse aparelho não suporta avisos.'); return }
-            void Notification.requestPermission().then((p) => {
-              alert(p === 'granted' ? 'Avisos ligados! 🔔' : 'Avisos não foram permitidos.')
-            })
-          }}
-        >
-          Permitir avisos
-        </button>
-      </div>
+      <CartaoAvisosDoCelular perfil="kelly" />
       <div className="cartao">
         <h2>📦 Versão do app</h2>
         <p className="ajuda">

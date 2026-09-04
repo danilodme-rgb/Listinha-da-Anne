@@ -3,9 +3,11 @@ import type { Perfil } from './lib/types'
 import { hoje, paraData } from './lib/dates'
 import {
   atualizarDaNuvem, avisosDe, conectarNuvem, conferirAvisoDoPapai, listaDe, naoLidos, useEstado,
-  useStatusNuvem,
+  useSincronizacao,
 } from './lib/store'
 import { ligadaPeloLink } from './lib/nuvem'
+import { resumoConexao } from './lib/conexao'
+import { avisosANotificar, mostrarNoCelular } from './lib/avisos-do-celular'
 import { EscalaView } from './views/EscalaView'
 import { KellyView } from './views/KellyView'
 import { AnneView } from './views/AnneView'
@@ -26,18 +28,21 @@ interface PropsApp {
 }
 
 /**
- * Aviso curto quando a sincronizacao esta com problema. Sem isso, uma falha de
- * publicacao ficava invisivel: o app parecia certo e nada chegava no outro
- * celular. No app da Anne nao ha Ajustes, entao esta e' a unica pista dela.
+ * Aviso curto no topo quando a sincronizacao nao esta boa. Sem isso, uma falha
+ * ficava invisivel: o app parecia certo e nada chegava no outro celular -- e o
+ * pior caso, aparelho sem configuracao nenhuma, nao dizia nada em lugar nenhum.
+ * So' aparece quando ha' o que fazer: erro ou aparelho ainda nao ligado.
+ * "Conectando" nao entra aqui, senao o aviso vira paisagem.
  */
 function AvisoDeNuvem({ perfil }: { perfil: Perfil }) {
-  const { status } = useStatusNuvem()
-  if (status !== 'erro') return null
+  const sinc = useSincronizacao()
+  const resumo = resumoConexao({ ...sinc, agora: Date.now() }, perfil)
+  if (resumo.tom !== 'erro' && !(resumo.tom === 'atencao' && !sinc.configurada)) return null
   return (
     <div className="sub" style={{ fontWeight: 800 }}>
-      {perfil === 'kelly'
-        ? '⚠️ Sincronização com erro — veja em Ajustes'
-        : '⚠️ Sem conexão com o celular da mamãe'}
+      {sinc.configurada
+        ? (perfil === 'kelly' ? '⚠️ Sincronização com erro — veja em Ajustes' : '⚠️ Sem conexão com o celular da mamãe')
+        : (perfil === 'kelly' ? '🔌 Sincronização desligada — ligue em Ajustes' : '🔌 Este celular ainda não está ligado no da mamãe')}
     </div>
   )
 }
@@ -55,6 +60,10 @@ export function App({ perfilFixo }: PropsApp) {
   const [mes, setMes] = useState(inicio.getMonth())
   const [dia, setDia] = useState(hoje())
   const [avisoDoLink, setAvisoDoLink] = useState(() => ligadaPeloLink())
+  const sinc = useSincronizacao()
+  // "Sincronizacao ligada!" junto de "nao consigo falar com o outro celular"
+  // sao dois recados que se contradizem; nesse caso vale o que informa o erro.
+  const conexaoComErro = resumoConexao({ ...sinc, agora: Date.now() }, perfil).tom === 'erro'
   const { puxa, rodando } = useAtualizarPuxando(atualizarDaNuvem)
 
   useEffect(() => { conectarNuvem() }, [])
@@ -161,7 +170,7 @@ export function App({ perfilFixo }: PropsApp) {
       <main className="conteudo">
         <FaixaAtualizar puxa={puxa} rodando={rodando} />
 
-        {avisoDoLink && (
+        {avisoDoLink && !conexaoComErro && (
           <div className="cartao">
             <h2>☁️ Sincronização ligada!</h2>
             <p className="ajuda">
@@ -230,22 +239,28 @@ function PedirPin({ esperado, aoAcertar, aoFechar }: {
   )
 }
 
-/** Dispara a notificação do sistema quando chega um aviso novo para o perfil aberto. */
+/**
+ * Dispara a notificação do sistema quando chega um aviso novo para o perfil aberto.
+ *
+ * A conta é por **id já conhecido**, nunca por horário: o `em` do aviso foi
+ * carimbado pelo relógio do outro celular, e um relógio atrasado fazia o aviso
+ * recém-chegado parecer velho — ninguém era avisado de nada.
+ */
 function useAvisoDoCelular(perfil: Perfil) {
   const estado = useEstado()
-  const visto = useRef<string | null>(null)
-  const montado = useRef(Date.now())
+  const conhecidos = useRef<Set<string> | null>(null)
+  const perfilAnterior = useRef<Perfil>(perfil)
 
   useEffect(() => {
     const meus = avisosDe(estado, perfil)
-    const ultimo = meus[0]
-    if (!ultimo || ultimo.id === visto.current) return
-    const primeiraVez = visto.current === null
-    visto.current = ultimo.id
-    if (primeiraVez || ultimo.em < montado.current) return
-    if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return
-    try {
-      new Notification(ultimo.titulo, { body: ultimo.texto, tag: ultimo.id })
-    } catch { /* alguns navegadores exigem service worker */ }
+    // Primeira passada (e troca de perfil): o que já estava aqui não vira aviso.
+    if (conhecidos.current === null || perfilAnterior.current !== perfil) {
+      perfilAnterior.current = perfil
+      conhecidos.current = new Set(meus.map((a) => a.id))
+      return
+    }
+    const novos = avisosANotificar(meus, conhecidos.current)
+    for (const a of meus) conhecidos.current.add(a.id)
+    for (const a of novos) void mostrarNoCelular(a)
   }, [estado, perfil])
 }

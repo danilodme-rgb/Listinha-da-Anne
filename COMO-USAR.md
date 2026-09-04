@@ -160,6 +160,14 @@ todos. Se o outro celular ainda estiver pedindo o PIN antigo, **puxe a tela para
 - **No celular da Anne:** aba *Minha listinha*, lá no fim → **🔔 Avisos no celular →
   Quero receber avisos**.
 
+Depois de permitir, aparece o botão **Testar aviso agora**. Toque nele: se o aviso não
+aparecer na barra do celular, os avisos não estão funcionando naquele aparelho — e aí é
+problema de permissão do sistema, não do app.
+
+> **O app precisa estar aberto** (na tela ou em segundo plano). Com o app fechado, nenhum
+> aviso chega: isso exigiria um servidor de notificações, que este app não tem de propósito
+> (ele é offline e sem back-end). Mesmo sem aviso, a listinha está lá quando ela abrir o app.
+
 O celular passa a notificar:
 
 | Quando | Quem é avisada | O que aparece |
@@ -171,6 +179,22 @@ O celular passa a notificar:
 
 O aviso de papai na cidade sai uma vez por dia, nos dois aparelhos, e depende da escala estar
 lida naquele mês — dia sem escala não avisa nada.
+
+## A Anne não está recebendo a listinha? Comece por aqui
+
+Na aba **Minha listinha** do celular dela, o primeiro cartão diz o estado da conexão. Ele
+tem quatro respostas possíveis, e cada uma tem um conserto diferente:
+
+| O que o cartão diz | O que fazer |
+| --- | --- |
+| 🔌 *Ainda não estou ligada no celular da mamãe* | O celular dela **nunca recebeu o link**. No app da Kelly: Ajustes → 📲 Ligar no celular da Anne → Gerar link → mandar para ela e **abrir o link no mesmo navegador em que o app está instalado** (Chrome/Safari, não o navegador de dentro do WhatsApp). |
+| ⏳ *Procurando o celular da mamãe…* | Só esperar alguns segundos. Se ficar preso aí, confira a internet do aparelho. |
+| ⚠️ *Não estou conseguindo falar…* | Erro de conexão. Toque em **Procurar novidades**; se insistir, veja o motivo em Ajustes no app da Kelly. |
+| 💜 *Ligada no celular da mamãe* | A conexão está boa. Se mesmo assim não há tarefas, veja o quadro abaixo. |
+
+**Conexão boa e nenhuma tarefa?** Quase sempre a listinha foi montada **para outro dia**. A
+tela da Anne mostra **só o dia de hoje**. No app da Kelly, se o calendário estiver em outro
+dia, aparece um aviso amarelo em cima da listinha com o botão *Ir para a listinha de hoje*.
 
 ## Puxar para atualizar
 

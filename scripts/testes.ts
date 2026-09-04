@@ -15,6 +15,8 @@ import {
 } from '../src/lib/regras'
 import { emCasaNoMes, emCasaPorMes, emCasaTotal } from '../src/lib/relatorio'
 import { deveRecarregar, podeProcurar } from '../src/lib/atualizacao'
+import { avisosANotificar, textoDaPermissao } from '../src/lib/avisos-do-celular'
+import { resumoConexao, type EstadoConexao } from '../src/lib/conexao'
 import { escaparPdf, montarPdf, paraWinAnsi, quebrarTexto } from '../src/lib/pdf'
 import { linhasDoRelatorio } from '../src/lib/relatorio'
 import type { Estado, TarefaDoDia } from '../src/lib/types'
@@ -479,6 +481,77 @@ eq('nuvem: mudanca local pendente mas a nuvem e mais nova, aceita',
   eq('aviso de ontem vem marcado', quandoCurto(meioDia(somaDias(hoje(), -1))), 'ontem 12:34')
   eq('aviso mais antigo vem com a data',
     quandoCurto(meioDia(somaDias(hoje(), -5))), `${curta(somaDias(hoje(), -5))} 12:34`)
+}
+
+// ---------------------------------------------------------------- avisos no celular
+// A regra de "o que vira notificacao" e' por id conhecido, nunca por horario:
+// o `em` foi carimbado pelo relogio do OUTRO celular.
+{
+  const av = (id: string, em: number, lido = false) =>
+    ({ id, para: 'anne' as const, em, titulo: `t${id}`, texto: '', lido })
+
+  eq('aviso novo vira notificacao',
+    avisosANotificar([av('a', 100)], new Set(['b'])).map((a) => a.id), ['a'])
+  eq('aviso ja conhecido nao toca de novo',
+    avisosANotificar([av('a', 100)], new Set(['a'])), [])
+  eq('aviso ja lido nao toca',
+    avisosANotificar([av('a', 100, true)], new Set()), [])
+
+  // O bug antigo: o outro celular com o relogio atrasado carimbava o aviso no
+  // passado e o app decidia que era velho -- ninguem era avisado de nada.
+  eq('relogio do outro celular atrasado nao engole o aviso',
+    avisosANotificar([av('novo', Date.now() - 86_400_000)], new Set()).map((a) => a.id), ['novo'])
+
+  // Chegam do mais novo para o mais velho; a notificacao sai na ordem dos fatos.
+  eq('lote sai do mais antigo para o mais novo',
+    avisosANotificar([av('c', 3), av('b', 2), av('a', 1)], new Set()).map((x) => x.id),
+    ['a', 'b', 'c'])
+  eq('lote grande tem teto',
+    avisosANotificar([av('e', 5), av('d', 4), av('c', 3), av('b', 2), av('a', 1)], new Set()).length, 3)
+
+  eq('permissao negada nao oferece botao que nao resolve',
+    textoDaPermissao('negado', 'anne').botao, null)
+  eq('permissao ainda nao pedida oferece o botao',
+    Boolean(textoDaPermissao('padrao', 'anne').botao), true)
+  eq('avisos ligados nao pedem nada',
+    textoDaPermissao('ligado', 'kelly').botao, null)
+}
+
+// ---------------------------------------------------------------- resumo da conexao
+// O modo de falhar mais caro era o silencioso: sem configuracao, o app nao
+// conectava e a tela nao dizia nada. Cada estado tem de ter nome proprio.
+{
+  const agora = 1_000_000
+  const base: EstadoConexao = {
+    configurada: true, status: 'ligado', detalhe: '',
+    respondeuEm: agora - 5_000, pendenteDesde: null, agora,
+  }
+  const r = (p: Partial<EstadoConexao>) => resumoConexao({ ...base, ...p }, 'anne')
+
+  eq('sem configuracao o app diz que nao esta ligado',
+    [r({ configurada: false }).tom, r({ configurada: false }).acao], ['atencao', 'pedir-link'])
+  eq('erro de conexao aparece como erro', r({ status: 'erro', detalhe: 'x' }).tom, 'erro')
+  eq('conectando nao se disfarca de ligado', r({ status: 'conectando' }).tom, 'esperando')
+  eq('ligado mas sem resposta ainda nao e sucesso', r({ respondeuEm: null }).tom, 'esperando')
+  eq('ligado e respondendo e sucesso', r({}).tom, 'ok')
+  eq('mudanca recente esperando subir nao assusta',
+    r({ pendenteDesde: agora - 3_000 }).tom, 'ok')
+  eq('mudanca emperrada ha um minuto vira aviso',
+    r({ pendenteDesde: agora - 90_000 }).tom, 'atencao')
+
+  // Prova no sentido inverso: 'ok' so' pode sair de aparelho configurado,
+  // ligado e com resposta. Se algum desses cair, o cartao NAO pode dizer que
+  // esta tudo bem -- foi assim que o silencio virou "a listinha nao chega".
+  const ruins: Array<Partial<EstadoConexao>> = [
+    { configurada: false }, { status: 'desligado' }, { status: 'conectando' },
+    { status: 'erro' }, { respondeuEm: null },
+  ]
+  eq('nenhum estado ruim se passa por "tudo certo"',
+    ruins.filter((x) => r(x).tom === 'ok').length, 0)
+  eq('todo estado ruim explica o proximo passo',
+    ruins.filter((x) => r(x).texto.length < 20).length, 0)
+  eq('a Kelly ve o caminho dela (Ajustes)',
+    resumoConexao({ ...base, configurada: false }, 'kelly').acao, 'abrir-ajustes')
 }
 
 console.log(falhas === 0 ? '\nTodos os testes passaram.' : `\n${falhas} teste(s) falharam.`)

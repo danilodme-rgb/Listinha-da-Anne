@@ -16,4 +16,11 @@ estado normal, não falha. O que ela impede é a lição sumir sem ninguém ver.
 
 ## Abertas
 
-_(nenhuma no momento)_
+- [ ] **API que só existe no aparelho se prova no aparelho, com botão dentro do produto.**
+  Notificação, service worker, permissão de sistema: teste unitário e navegador de
+  computador passam verdes com o caminho errado (`new Notification` funciona no desktop e é
+  proibido no Chrome do Android). Todo recurso assim precisa de um gesto no próprio app que
+  execute o caminho inteiro e **diga o resultado** — senão a falha mora num `catch` vazio.
+- [ ] **`catch` que engole erro precisa devolver o que aconteceu a quem chamou.** Capturar
+  para não derrubar o app é certo; capturar e devolver `void` transforma falha em silêncio, e
+  silêncio o usuário lê como "funcionou". A função devolve o desfecho; quem chama mostra.
